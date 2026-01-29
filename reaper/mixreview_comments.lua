@@ -398,7 +398,7 @@ local function draw_login_section()
     return
   end
 
-  if reaper.ImGui_CollapsingHeader(ctx, "Login", reaper.ImGui_TreeNodeFlags_DefaultOpen()) then
+  if reaper.ImGui_TreeNode(ctx, "Login", reaper.ImGui_TreeNodeFlags_DefaultOpen()) then
     reaper.ImGui_Text(ctx, "Server:")
     reaper.ImGui_SameLine(ctx, 70)
     local changed
@@ -426,6 +426,7 @@ local function draw_login_section()
     if login_error ~= "" then
       reaper.ImGui_TextColored(ctx, COL_RED, login_error)
     end
+    reaper.ImGui_TreePop(ctx)
   end
 end
 
