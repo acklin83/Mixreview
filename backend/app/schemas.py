@@ -91,10 +91,19 @@ class CommentCreate(BaseModel):
     text: str = Field(min_length=1, max_length=5000)
 
 
-class CommentUpdate(BaseModel):
-    text: str | None = None
-    solved: bool | None = None
-    reply_text: str | None = None
+class ReplyCreate(BaseModel):
+    author_name: str = Field(min_length=1, max_length=100)
+    text: str = Field(min_length=1, max_length=5000)
+
+
+class ReplyOut(BaseModel):
+    id: int
+    comment_id: int
+    author_name: str
+    text: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class CommentOut(BaseModel):
@@ -104,7 +113,7 @@ class CommentOut(BaseModel):
     author_name: str
     text: str
     solved: bool = False
-    reply_text: str | None = None
+    replies: list[ReplyOut] = []
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -122,6 +131,7 @@ class SettingsUpdate(BaseModel):
     waveform_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
     waveform_progress_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
     logo_height: int | None = Field(default=None, ge=16, le=120)
+    clients_can_resolve: bool | None = None
 
 
 class SettingsOut(BaseModel):
@@ -135,6 +145,7 @@ class SettingsOut(BaseModel):
     waveform_progress_color: str
     logo_url: str | None = None
     logo_height: int = 32
+    clients_can_resolve: bool = False
 
     model_config = {"from_attributes": True}
 

@@ -39,6 +39,7 @@ def _to_settings_out(settings: AppSettings) -> dict:
         "waveform_progress_color": settings.waveform_progress_color,
         "logo_url": logo_url,
         "logo_height": settings.logo_height,
+        "clients_can_resolve": settings.clients_can_resolve,
     }
 
 
@@ -58,6 +59,7 @@ def update_settings(
     for field in [
         "accent_color", "dark_900", "dark_800", "dark_700", "dark_600",
         "text_color", "waveform_color", "waveform_progress_color", "logo_height",
+        "clients_can_resolve",
     ]:
         value = getattr(req, field)
         if value is not None:
