@@ -4,7 +4,7 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 DATABASE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "database")
 os.makedirs(DATABASE_DIR, exist_ok=True)
-DATABASE_URL = f"sqlite:///{os.path.join(DATABASE_DIR, 'mixreview.db')}"
+DATABASE_URL = f"sqlite:///{os.path.join(DATABASE_DIR, 'mixreaview.db')}"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)

@@ -1,4 +1,4 @@
-# Mix Review System - Project Documentation
+# Mix Reaview System - Project Documentation
 
 ## Project Overview
 A self-hosted audio review platform for Störsender-Studio that allows clients to listen to mix versions and leave timeline-based comments via secure share links.
@@ -35,7 +35,13 @@ Project
                  ├─ timecode (seconds, float)
                  ├─ author_name
                  ├─ text
-                 └─ created_at
+                 ├─ solved (boolean)
+                 ├─ created_at
+                 └─ Replies[]
+                      ├─ id
+                      ├─ author_name
+                      ├─ text
+                      └─ created_at
 ```
 
 ### Key Design Decisions
@@ -87,7 +93,7 @@ Project
 
 ### Directory Structure
 ```
-mixreview/
+mixreaview/
 ├── docker-compose.yml
 ├── nginx/
 │   ├── Dockerfile
@@ -115,6 +121,8 @@ mixreview/
 │       ├── index.html
 │       ├── css/
 │       └── js/
+├── reaper/
+│   └── mixreaview_comments.lua  # REAPER ReaImGui integration script
 └── data/
     ├── uploads/          # Audio files
     ├── database/         # SQLite DB
@@ -275,7 +283,7 @@ https://mix.stoersender.ch/admin/setup
 ### Local Development
 ```bash
 # Clone/create project
-cd ~/Projects/mixreview
+cd ~/Projects/mixreaview
 
 # Start services
 docker-compose up --build
@@ -289,11 +297,11 @@ API Docs: http://localhost:8000/docs
 ### Synology Deployment
 ```bash
 # From development machine
-rsync -avz ~/Projects/mixreview/ user@diskstation:/volume1/docker/mixreview/
+rsync -avz ~/Projects/mixreaview/ user@diskstation:/volume1/docker/mixreaview/
 
 # On DiskStation
 ssh user@diskstation
-cd /volume1/docker/mixreview
+cd /volume1/docker/mixreaview
 docker-compose up -d
 
 # Configure in Synology DSM:
@@ -327,6 +335,62 @@ Custom Headers:
 **Location**: Switzerland  
 **Network**: 10GbE DiskStation  
 **Use Case**: Professional audio production review workflow
+
+## Comment System
+
+### Data Model
+Comments support nested replies (one level deep) and a resolved/solved status:
+
+```
+Comment
+  ├─ id, version_id, timecode, author_name, text, solved (bool)
+  ├─ created_at
+  └─ Replies[]
+       ├─ id, comment_id, author_name, text
+       └─ created_at
+```
+
+### Comment API Endpoints
+```
+GET    /api/projects/{uuid}/comments                        # Returns comments with replies + solved status
+POST   /api/projects/{uuid}/comments                        # Create root comment
+POST   /api/projects/{uuid}/comments/{id}/reply             # Reply to comment (one level)
+PATCH  /api/projects/{uuid}/comments/{id}/resolve           # Toggle resolved (admin JWT required)
+PATCH  /api/projects/{uuid}/comments/{id}/resolve-client    # Toggle resolved (share link, requires clients_can_resolve setting)
+```
+
+### Settings
+- `clients_can_resolve` (boolean, default: false) - Controls whether clients with share links can resolve/unresolve comments. Configurable via `PUT /admin/settings`.
+
+## REAPER Integration
+
+### Script: `reaper/mixreaview_comments.lua`
+A ReaImGui-based script for managing Mix Reaview comments directly from REAPER.
+
+**Requirements:**
+- REAPER 6.0+
+- ReaImGui extension (install via ReaPack)
+
+**Installation:**
+1. Copy `reaper/mixreaview_comments.lua` to your REAPER Scripts folder
+2. In REAPER: Actions → Show Action List → Load ReaScript
+3. Assign a keyboard shortcut if desired
+
+**Features:**
+- Admin login (JWT authentication via username/password)
+- Load project by share link
+- Song/version selection dropdowns
+- **Calibration**: Set song start offset from REAPER cursor position (persisted per song/version)
+- **New comments**: Author name + text, timecode from current REAPER cursor position (relative to calibration offset)
+- **Comment list**: Filterable (All / Open / Resolved), sorted by timecode
+- **Jump**: Sets REAPER edit cursor to comment timecode + starts playback
+- **Reply**: Inline reply input per comment
+- **Resolve/Unresolve**: Toggle via admin JWT (requires login)
+- **Refresh**: Reload comments from server
+
+**Persisted state** (via `reaper.ExtState`):
+- Server URL, username, author name, last share link
+- Calibration offsets per song/version
 
 ## Development Notes
 - Prefer simple, maintainable solutions over complex frameworks

@@ -1,6 +1,6 @@
--- MixReview Comments - REAPER Integration Script
+-- Mix Reaview Comments - REAPER Integration Script
 -- Requires ReaImGui (install via ReaPack)
--- Connects to MixReview API for comment management
+-- Connects to Mix Reaview API for comment management
 --
 -- Usage: Run from REAPER Actions list
 -- Dependencies: ReaImGui, json (bundled below)
@@ -174,14 +174,14 @@ end
 ---------------------------------------------------------------------------
 -- State
 ---------------------------------------------------------------------------
-local ctx = reaper.ImGui_CreateContext('MixReview Comments')
+local ctx = reaper.ImGui_CreateContext('Mix Reaview Comments')
 local FONT_SIZE = 14
 
 -- Persistent state (saved across sessions via ExtState)
-local server_url = reaper.GetExtState("MixReview", "server_url")
-local author_name = reaper.GetExtState("MixReview", "author_name")
-local username = reaper.GetExtState("MixReview", "username")
-local share_link_input = reaper.GetExtState("MixReview", "last_share_link")
+local server_url = reaper.GetExtState("Mix Reaview", "server_url")
+local author_name = reaper.GetExtState("Mix Reaview", "author_name")
+local username = reaper.GetExtState("Mix Reaview", "username")
+local share_link_input = reaper.GetExtState("Mix Reaview", "last_share_link")
 
 if server_url == "" then server_url = "https://mix.stoersender.ch" end
 if author_name == "" then author_name = "Frank" end
@@ -240,10 +240,10 @@ local function get_current_offset()
 end
 
 local function save_state()
-  reaper.SetExtState("MixReview", "server_url", server_url, true)
-  reaper.SetExtState("MixReview", "author_name", author_name, true)
-  reaper.SetExtState("MixReview", "username", username, true)
-  reaper.SetExtState("MixReview", "last_share_link", share_link_input, true)
+  reaper.SetExtState("Mix Reaview", "server_url", server_url, true)
+  reaper.SetExtState("Mix Reaview", "author_name", author_name, true)
+  reaper.SetExtState("Mix Reaview", "username", username, true)
+  reaper.SetExtState("Mix Reaview", "last_share_link", share_link_input, true)
 end
 
 ---------------------------------------------------------------------------
@@ -465,7 +465,7 @@ local function draw_calibration_section()
     local key = get_offset_key()
     if key ~= "" then
       calibration_offsets[key] = reaper.GetCursorPosition()
-      reaper.SetExtState("MixReview", "offset_" .. key, tostring(calibration_offsets[key]), true)
+      reaper.SetExtState("Mix Reaview", "offset_" .. key, tostring(calibration_offsets[key]), true)
     end
   end
 
@@ -605,7 +605,7 @@ end
 ---------------------------------------------------------------------------
 local function loop()
   reaper.ImGui_SetNextWindowSize(ctx, 420, 700, reaper.ImGui_Cond_FirstUseEver())
-  local visible, open = reaper.ImGui_Begin(ctx, 'MixReview Comments', true)
+  local visible, open = reaper.ImGui_Begin(ctx, 'Mix Reaview Comments', true)
 
   if visible then
     draw_login_section()
@@ -627,7 +627,7 @@ for _, song in ipairs(songs) do
   if song.versions then
     for _, ver in ipairs(song.versions) do
       local key = tostring(song.id) .. "_" .. tostring(ver.id)
-      local saved = reaper.GetExtState("MixReview", "offset_" .. key)
+      local saved = reaper.GetExtState("Mix Reaview", "offset_" .. key)
       if saved ~= "" then calibration_offsets[key] = tonumber(saved) end
     end
   end
