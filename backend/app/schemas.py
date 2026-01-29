@@ -77,6 +77,7 @@ class VersionOut(BaseModel):
     version_number: int
     label: str
     original_filename: str
+    favourite: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}
