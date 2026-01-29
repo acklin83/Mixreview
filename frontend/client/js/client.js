@@ -81,7 +81,7 @@ async function init() {
   $('project-title').textContent = project.title;
 
   // Restore author name
-  const saved = localStorage.getItem('mixreview_author');
+  const saved = localStorage.getItem('mixreaview_author');
   if (saved) $('author-name').value = saved;
 
   showSongsList();
@@ -301,7 +301,7 @@ window.toggleReplyInput = function(commentId) {
   el.classList.toggle('hidden');
   if (!el.classList.contains('hidden')) {
     const authorInput = document.getElementById(`reply-author-${commentId}`);
-    const saved = localStorage.getItem('mixreview_author') || '';
+    const saved = localStorage.getItem('mixreaview_author') || '';
     if (saved && !authorInput.value) authorInput.value = saved;
     document.getElementById(`reply-text-${commentId}`).focus();
   }
@@ -316,7 +316,7 @@ window.submitReply = async function(commentId) {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ author_name: author, text })
     });
-    localStorage.setItem('mixreview_author', author);
+    localStorage.setItem('mixreaview_author', author);
     await loadComments(currentVersion.id);
   } catch (err) { alert('Failed to reply: ' + err.message); }
 };
@@ -333,7 +333,7 @@ async function submitComment() {
   const timecode = ws ? ws.getCurrentTime() : 0;
   try {
     await postComment({ version_id: currentVersion.id, timecode, author_name: author, text });
-    localStorage.setItem('mixreview_author', author);
+    localStorage.setItem('mixreaview_author', author);
     $('comment-text').value = '';
     await loadComments(currentVersion.id);
   } catch (err) { alert('Failed to post comment: ' + err.message); }

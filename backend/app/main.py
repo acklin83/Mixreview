@@ -10,7 +10,7 @@ from .routers import admin, comments, projects, settings
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="MixReview", version="0.1.0")
+app = FastAPI(title="Mix Reaview", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
