@@ -419,7 +419,7 @@ local function draw_login_section()
     rem_changed, remember_password = reaper.ImGui_Checkbox(ctx, "Remember me", remember_password)
     if rem_changed then save_state() end
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "Login") then
+    if reaper.ImGui_Button(ctx, "Login##login_btn") then
       api_login()
     end
 
@@ -435,7 +435,7 @@ local function draw_project_section()
   local changed
   changed, share_link_input = reaper.ImGui_InputText(ctx, "##share_link", share_link_input)
   reaper.ImGui_SameLine(ctx)
-  if reaper.ImGui_Button(ctx, "Load") then
+  if reaper.ImGui_Button(ctx, "Load##load_btn") then
     api_load_project()
   end
 
@@ -524,7 +524,7 @@ local function draw_new_comment_section()
   reaper.ImGui_SetNextItemWidth(ctx, -80)
   changed, new_comment_text = reaper.ImGui_InputText(ctx, "##new_comment", new_comment_text)
   reaper.ImGui_SameLine(ctx)
-  if reaper.ImGui_Button(ctx, "Add", 70, 0) and new_comment_text ~= "" then
+  if reaper.ImGui_Button(ctx, "Add##add_btn", 70, 0) and new_comment_text ~= "" then
     api_create_comment(relative_tc, new_comment_text)
     new_comment_text = ""
   end
