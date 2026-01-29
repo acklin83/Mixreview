@@ -268,9 +268,18 @@ local function api_login()
   end
 end
 
+local function extract_share_code(input)
+  -- Accept full URL or just the code
+  -- e.g. "https://mix.stoersender.ch/fb162cbea433" -> "fb162cbea433"
+  local code = input:match("[/]([%w]+)$")
+  if code then return code end
+  return input
+end
+
 local function api_load_project()
   error_msg = ""
   loading = true
+  share_link_input = extract_share_code(share_link_input)
   local url = server_url .. "/api/projects/" .. share_link_input
   local status, resp = http_request("GET", url)
   if status == 200 then
