@@ -228,10 +228,9 @@ local function format_timecode(seconds)
 end
 
 local function get_offset_key()
-  if selected_song_idx > 0 and selected_version_idx > 0 then
+  if selected_song_idx > 0 then
     local song = songs[selected_song_idx]
-    local ver = song and song.versions and song.versions[selected_version_idx]
-    if ver then return tostring(song.id) .. "_" .. tostring(ver.id) end
+    if song then return tostring(song.id) end
   end
   return ""
 end
@@ -370,48 +369,69 @@ local function api_resolve(comment_id)
 end
 
 ---------------------------------------------------------------------------
+-- Colors
+---------------------------------------------------------------------------
+local COL_GREEN     = 0x44CC44FF
+local COL_ORANGE    = 0xFFAA00FF
+local COL_RED       = 0xFF4444FF
+local COL_BLUE      = 0x88BBFFFF
+local COL_DIMMED    = 0x888888FF
+local COL_ACCENT    = 0x6C8CFFFF
+local COL_BG_OPEN   = 0x1A2A4A80
+local COL_BG_SOLVED = 0x1A3A1A40
+
+---------------------------------------------------------------------------
 -- UI
 ---------------------------------------------------------------------------
 local function draw_login_section()
-  reaper.ImGui_SeparatorText(ctx, "Login")
-
   if logged_in then
-    reaper.ImGui_TextColored(ctx, 0x00FF00FF, "Logged in as " .. username)
-    if reaper.ImGui_Button(ctx, "Logout") then
+    -- Compact: one line when logged in
+    reaper.ImGui_TextColored(ctx, COL_GREEN, ">> " .. username)
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_SmallButton(ctx, "Logout") then
       logged_in = false
       jwt_token = ""
       if not remember_password then password = "" end
     end
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_TextColored(ctx, COL_DIMMED, "| " .. server_url)
     return
   end
 
-  reaper.ImGui_Text(ctx, "Server URL:")
-  local changed
-  changed, server_url = reaper.ImGui_InputText(ctx, "##server_url", server_url)
+  if reaper.ImGui_CollapsingHeader(ctx, "Login", reaper.ImGui_TreeNodeFlags_DefaultOpen()) then
+    reaper.ImGui_Text(ctx, "Server:")
+    reaper.ImGui_SameLine(ctx, 70)
+    local changed
+    reaper.ImGui_SetNextItemWidth(ctx, -1)
+    changed, server_url = reaper.ImGui_InputText(ctx, "##server_url", server_url)
 
-  reaper.ImGui_Text(ctx, "Username:")
-  changed, username = reaper.ImGui_InputText(ctx, "##username", username)
+    reaper.ImGui_Text(ctx, "User:")
+    reaper.ImGui_SameLine(ctx, 70)
+    reaper.ImGui_SetNextItemWidth(ctx, -1)
+    changed, username = reaper.ImGui_InputText(ctx, "##username", username)
 
-  reaper.ImGui_Text(ctx, "Password:")
-  changed, password = reaper.ImGui_InputText(ctx, "##password", password, reaper.ImGui_InputTextFlags_Password())
+    reaper.ImGui_Text(ctx, "Password:")
+    reaper.ImGui_SameLine(ctx, 70)
+    reaper.ImGui_SetNextItemWidth(ctx, -1)
+    changed, password = reaper.ImGui_InputText(ctx, "##password", password, reaper.ImGui_InputTextFlags_Password())
 
-  local rem_changed
-  rem_changed, remember_password = reaper.ImGui_Checkbox(ctx, "Remember me", remember_password)
-  if rem_changed then save_state() end
+    local rem_changed
+    rem_changed, remember_password = reaper.ImGui_Checkbox(ctx, "Remember me", remember_password)
+    if rem_changed then save_state() end
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "Login") then
+      api_login()
+    end
 
-  if reaper.ImGui_Button(ctx, "Login") then
-    api_login()
-  end
-
-  if login_error ~= "" then
-    reaper.ImGui_TextColored(ctx, 0xFF4444FF, login_error)
+    if login_error ~= "" then
+      reaper.ImGui_TextColored(ctx, COL_RED, login_error)
+    end
   end
 end
 
 local function draw_project_section()
-  reaper.ImGui_SeparatorText(ctx, "Project")
-
-  reaper.ImGui_Text(ctx, "Share Link:")
+  -- Compact: share link + load on one line
+  reaper.ImGui_SetNextItemWidth(ctx, -50)
   local changed
   changed, share_link_input = reaper.ImGui_InputText(ctx, "##share_link", share_link_input)
   reaper.ImGui_SameLine(ctx)
@@ -420,23 +440,24 @@ local function draw_project_section()
   end
 
   if project_data then
-    reaper.ImGui_TextColored(ctx, 0xAAAAAAFF, project_data.title or "")
+    reaper.ImGui_TextColored(ctx, COL_ACCENT, project_data.title or "")
   end
 
   if error_msg ~= "" then
-    reaper.ImGui_TextColored(ctx, 0xFF4444FF, error_msg)
+    reaper.ImGui_TextColored(ctx, COL_RED, error_msg)
   end
 end
 
 local function draw_song_version_section()
   if not project_data or #songs == 0 then return end
 
-  reaper.ImGui_SeparatorText(ctx, "Song / Version")
-
-  -- Song dropdown
+  -- Song and version on same line with calibration
   local current_song = songs[selected_song_idx]
   local song_label = current_song and current_song.title or "Select..."
-  if reaper.ImGui_BeginCombo(ctx, "Song", song_label) then
+
+  local avail_w = reaper.ImGui_GetContentRegionAvail(ctx)
+  reaper.ImGui_SetNextItemWidth(ctx, avail_w * 0.55)
+  if reaper.ImGui_BeginCombo(ctx, "##song", song_label) then
     for i, song in ipairs(songs) do
       if reaper.ImGui_Selectable(ctx, song.title, i == selected_song_idx) then
         selected_song_idx = i
@@ -448,11 +469,13 @@ local function draw_song_version_section()
     reaper.ImGui_EndCombo(ctx)
   end
 
-  -- Version dropdown
+  reaper.ImGui_SameLine(ctx)
+
   local versions = current_song and current_song.versions or {}
   local current_ver = versions[selected_version_idx]
-  local ver_label = current_ver and ("v" .. tostring(current_ver.version_number)) or "Select..."
-  if reaper.ImGui_BeginCombo(ctx, "Version", ver_label) then
+  local ver_label = current_ver and ("v" .. tostring(current_ver.version_number)) or "v?"
+  reaper.ImGui_SetNextItemWidth(ctx, -1)
+  if reaper.ImGui_BeginCombo(ctx, "##version", ver_label) then
     for i, ver in ipairs(versions) do
       local label = "v" .. tostring(ver.version_number)
       if ver.label and ver.label ~= "" then label = label .. " - " .. ver.label end
@@ -463,47 +486,45 @@ local function draw_song_version_section()
     end
     reaper.ImGui_EndCombo(ctx)
   end
-end
 
-local function draw_calibration_section()
-  if not project_data or #songs == 0 then return end
-
-  reaper.ImGui_SeparatorText(ctx, "Calibration")
-
+  -- Calibration inline
   local offset = get_current_offset()
-  reaper.ImGui_Text(ctx, "Song Start: " .. format_timecode(offset))
+  reaper.ImGui_TextColored(ctx, COL_DIMMED, "Offset: " .. format_timecode(offset))
   reaper.ImGui_SameLine(ctx)
-  if reaper.ImGui_Button(ctx, "Set from Cursor") then
+  if reaper.ImGui_SmallButton(ctx, "Set from Cursor") then
     local key = get_offset_key()
     if key ~= "" then
       calibration_offsets[key] = reaper.GetCursorPosition()
       reaper.SetExtState("Mix Reaview", "offset_" .. key, tostring(calibration_offsets[key]), true)
     end
   end
-
   if offset == 0 then
-    reaper.ImGui_TextColored(ctx, 0xFFAA00FF, "No offset set - timecodes start at 0:00")
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_TextColored(ctx, COL_ORANGE, "(!)")
   end
 end
 
 local function draw_new_comment_section()
   if share_link == "" or selected_version_idx == 0 then return end
 
-  reaper.ImGui_SeparatorText(ctx, "New Comment")
+  reaper.ImGui_Separator(ctx)
 
-  reaper.ImGui_Text(ctx, "Author:")
+  -- Compact: author + timecode on one line
+  reaper.ImGui_SetNextItemWidth(ctx, 120)
   local changed
   changed, author_name = reaper.ImGui_InputText(ctx, "##author", author_name)
+  reaper.ImGui_SameLine(ctx)
 
   local cursor_pos = reaper.GetCursorPosition()
   local offset = get_current_offset()
   local relative_tc = math.max(0, cursor_pos - offset)
-  reaper.ImGui_Text(ctx, "Timecode: " .. format_timecode(relative_tc) .. " (from cursor)")
+  reaper.ImGui_TextColored(ctx, COL_BLUE, "@" .. format_timecode(relative_tc))
 
-  reaper.ImGui_Text(ctx, "Comment:")
-  changed, new_comment_text = reaper.ImGui_InputTextMultiline(ctx, "##new_comment", new_comment_text, 0, 60)
-
-  if reaper.ImGui_Button(ctx, "Add Comment") and new_comment_text ~= "" then
+  -- Comment input + button on one row
+  reaper.ImGui_SetNextItemWidth(ctx, -80)
+  changed, new_comment_text = reaper.ImGui_InputText(ctx, "##new_comment", new_comment_text)
+  reaper.ImGui_SameLine(ctx)
+  if reaper.ImGui_Button(ctx, "Add", 70, 0) and new_comment_text ~= "" then
     api_create_comment(relative_tc, new_comment_text)
     new_comment_text = ""
   end
@@ -512,103 +533,125 @@ end
 local function draw_comments_section()
   if share_link == "" then return end
 
-  reaper.ImGui_SeparatorText(ctx, "Comments (" .. tostring(#comments) .. ")")
+  reaper.ImGui_Separator(ctx)
 
-  -- Filter buttons
-  if reaper.ImGui_RadioButton(ctx, "All", filter_mode == 0) then filter_mode = 0 end
+  -- Count open/resolved
+  local open_count, resolved_count = 0, 0
+  for _, c in ipairs(comments) do
+    if c.solved then resolved_count = resolved_count + 1 else open_count = open_count + 1 end
+  end
+
+  -- Filter + refresh compact
+  if reaper.ImGui_RadioButton(ctx, "All (" .. #comments .. ")", filter_mode == 0) then filter_mode = 0 end
   reaper.ImGui_SameLine(ctx)
-  if reaper.ImGui_RadioButton(ctx, "Open", filter_mode == 1) then filter_mode = 1 end
+  if reaper.ImGui_RadioButton(ctx, "Open (" .. open_count .. ")", filter_mode == 1) then filter_mode = 1 end
   reaper.ImGui_SameLine(ctx)
-  if reaper.ImGui_RadioButton(ctx, "Resolved", filter_mode == 2) then filter_mode = 2 end
+  if reaper.ImGui_RadioButton(ctx, "Done (" .. resolved_count .. ")", filter_mode == 2) then filter_mode = 2 end
   reaper.ImGui_SameLine(ctx)
-  if reaper.ImGui_Button(ctx, "Refresh") then
+  if reaper.ImGui_SmallButton(ctx, "Refresh") then
     api_load_comments()
   end
 
-  reaper.ImGui_Separator(ctx)
+  -- Scrollable comment list
+  local avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
+  if reaper.ImGui_BeginChild(ctx, "##comments_scroll", 0, avail_h, 0) then
 
-  -- Comment list
-  local offset = get_current_offset()
-  for _, c in ipairs(comments) do
-    local show = (filter_mode == 0)
-      or (filter_mode == 1 and not c.solved)
-      or (filter_mode == 2 and c.solved)
+    local offset = get_current_offset()
+    for _, c in ipairs(comments) do
+      local show = (filter_mode == 0)
+        or (filter_mode == 1 and not c.solved)
+        or (filter_mode == 2 and c.solved)
 
-    if show then
-      -- Comment header
-      local status_icon = c.solved and "[RESOLVED]" or "[OPEN]"
-      local status_color = c.solved and 0x44AA44FF or 0xFFAA00FF
+      if show then
+        reaper.ImGui_PushID(ctx, c.id)
 
-      reaper.ImGui_PushID(ctx, c.id)
+        -- Background color based on status
+        local bg_col = c.solved and COL_BG_SOLVED or COL_BG_OPEN
+        local sx, sy = reaper.ImGui_GetCursorScreenPos(ctx)
+        local avail_w2 = reaper.ImGui_GetContentRegionAvail(ctx)
 
-      reaper.ImGui_TextColored(ctx, 0x88BBFFFF, "@" .. format_timecode(c.timecode))
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_Text(ctx, "- " .. (c.author_name or ""))
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_TextColored(ctx, status_color, status_icon)
-
-      -- Comment text
-      reaper.ImGui_TextWrapped(ctx, c.text or "")
-
-      -- Action buttons
-      if reaper.ImGui_SmallButton(ctx, "Jump") then
-        local target = offset + c.timecode
-        reaper.SetEditCurPos(target, true, true)
-        local state = reaper.GetPlayState()
-        if state == 0 then -- not playing
-          reaper.OnPlayButton()
+        -- Timecode button (clickable = jump)
+        if c.solved then
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), COL_DIMMED)
         end
-      end
-      reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_SmallButton(ctx, "Reply") then
-        if reply_comment_id == c.id then
-          reply_comment_id = nil -- toggle off
+
+        if reaper.ImGui_SmallButton(ctx, "@" .. format_timecode(c.timecode)) then
+          local target = offset + c.timecode
+          reaper.SetEditCurPos(target, true, true)
+          local state = reaper.GetPlayState()
+          if state == 0 then reaper.OnPlayButton() end
+        end
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_Text(ctx, (c.author_name or ""))
+        reaper.ImGui_SameLine(ctx)
+        if c.solved then
+          reaper.ImGui_TextColored(ctx, COL_GREEN, "Done")
         else
-          reply_comment_id = c.id
-          reply_text = ""
+          reaper.ImGui_TextColored(ctx, COL_ORANGE, "Open")
         end
-      end
-      reaper.ImGui_SameLine(ctx)
-      if logged_in then
-        local resolve_label = c.solved and "Unresolve" or "Resolve"
-        if reaper.ImGui_SmallButton(ctx, resolve_label) then
-          api_resolve(c.id)
-        end
-      end
 
-      -- Reply input (inline)
-      if reply_comment_id == c.id then
-        reaper.ImGui_Indent(ctx, 20)
-        local changed
-        changed, reply_text = reaper.ImGui_InputText(ctx, "##reply_input", reply_text)
-        reaper.ImGui_SameLine(ctx)
-        if reaper.ImGui_SmallButton(ctx, "Send") and reply_text ~= "" then
-          api_reply(c.id, reply_text)
-          reply_comment_id = nil
-          reply_text = ""
+        -- Comment text
+        if c.solved then
+          reaper.ImGui_TextColored(ctx, COL_DIMMED, c.text or "")
+        else
+          reaper.ImGui_TextWrapped(ctx, c.text or "")
         end
-        reaper.ImGui_SameLine(ctx)
-        if reaper.ImGui_SmallButton(ctx, "Cancel") then
-          reply_comment_id = nil
-          reply_text = ""
-        end
-        reaper.ImGui_Unindent(ctx, 20)
-      end
 
-      -- Show existing replies
-      if c.replies and #c.replies > 0 then
-        reaper.ImGui_Indent(ctx, 20)
-        for _, r in ipairs(c.replies) do
-          reaper.ImGui_TextColored(ctx, 0x888888FF, "  " .. (r.author_name or "") .. ":")
+        if c.solved then
+          reaper.ImGui_PopStyleColor(ctx)
+        end
+
+        -- Action buttons (compact)
+        if reaper.ImGui_SmallButton(ctx, "Reply") then
+          if reply_comment_id == c.id then
+            reply_comment_id = nil
+          else
+            reply_comment_id = c.id
+            reply_text = ""
+          end
+        end
+        if logged_in then
           reaper.ImGui_SameLine(ctx)
-          reaper.ImGui_TextWrapped(ctx, r.text or "")
+          local resolve_label = c.solved and "Reopen" or "Resolve"
+          if reaper.ImGui_SmallButton(ctx, resolve_label) then
+            api_resolve(c.id)
+          end
         end
-        reaper.ImGui_Unindent(ctx, 20)
-      end
 
-      reaper.ImGui_PopID(ctx)
-      reaper.ImGui_Separator(ctx)
+        -- Reply input (inline)
+        if reply_comment_id == c.id then
+          reaper.ImGui_Indent(ctx, 16)
+          reaper.ImGui_SetNextItemWidth(ctx, -60)
+          local rchanged
+          rchanged, reply_text = reaper.ImGui_InputText(ctx, "##reply_input", reply_text)
+          reaper.ImGui_SameLine(ctx)
+          if reaper.ImGui_SmallButton(ctx, "Send") and reply_text ~= "" then
+            api_reply(c.id, reply_text)
+            reply_comment_id = nil
+            reply_text = ""
+          end
+          reaper.ImGui_Unindent(ctx, 16)
+        end
+
+        -- Existing replies
+        if c.replies and #c.replies > 0 then
+          reaper.ImGui_Indent(ctx, 16)
+          for _, r in ipairs(c.replies) do
+            reaper.ImGui_TextColored(ctx, COL_DIMMED, (r.author_name or "") .. ":")
+            reaper.ImGui_SameLine(ctx)
+            reaper.ImGui_TextWrapped(ctx, r.text or "")
+          end
+          reaper.ImGui_Unindent(ctx, 16)
+        end
+
+        reaper.ImGui_PopID(ctx)
+        reaper.ImGui_Spacing(ctx)
+        reaper.ImGui_Separator(ctx)
+        reaper.ImGui_Spacing(ctx)
+      end
     end
+
+    reaper.ImGui_EndChild(ctx)
   end
 end
 
@@ -634,15 +677,11 @@ local function loop()
   end
 end
 
--- Load saved calibration offsets
+-- Load saved calibration offsets (per song)
 for _, song in ipairs(songs) do
-  if song.versions then
-    for _, ver in ipairs(song.versions) do
-      local key = tostring(song.id) .. "_" .. tostring(ver.id)
-      local saved = reaper.GetExtState("Mix Reaview", "offset_" .. key)
-      if saved ~= "" then calibration_offsets[key] = tonumber(saved) end
-    end
-  end
+  local key = tostring(song.id)
+  local saved = reaper.GetExtState("Mix Reaview", "offset_" .. key)
+  if saved ~= "" then calibration_offsets[key] = tonumber(saved) end
 end
 
 reaper.defer(loop)
