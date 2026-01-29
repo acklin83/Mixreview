@@ -298,7 +298,7 @@ function renderComments() {
         <label class="ml-auto flex items-center gap-1 cursor-pointer">
           <input type="checkbox" ${c.solved ? 'checked' : ''} onchange="toggleSolved(${c.id}, this.checked)"
             class="accent-green-500">
-          <span class="text-xs ${c.solved ? 'text-green-400' : 'text-gray-500'}">Solved</span>
+          <span class="text-xs ${c.solved ? 'text-green-400' : 'text-gray-500'}">Done</span>
         </label>
         <button onclick="editComment(${c.id}, '${escAttr(c.text)}')" class="text-xs text-gray-400 hover:text-white transition ml-1">&#9998;</button>
         <button onclick="deleteComment(${c.id})" class="text-xs text-red-400/60 hover:text-red-400 transition">&#10005;</button>

@@ -260,7 +260,7 @@ function renderComments() {
           @${formatTime(c.timecode)}
         </button>
         <span class="text-sm font-medium text-gray-300">${esc(c.author_name)}</span>
-        ${c.solved ? '<span class="text-xs text-green-400 ml-auto">✓ Solved</span>' : ''}
+        ${c.solved ? '<span class="text-xs text-green-400 ml-auto">✓ Done</span>' : ''}
         <span class="text-xs text-gray-600 ${c.solved ? '' : 'ml-auto'}">${new Date(c.created_at).toLocaleString()}</span>
       </div>
       <p class="text-sm text-gray-400 ${c.solved ? 'line-through' : ''}">${esc(c.text)}</p>
