@@ -82,7 +82,7 @@ async function showProjects() {
       <div>
         <div class="font-medium">${esc(p.title)}</div>
         <div class="text-sm text-gray-500 mt-1">
-          ${p.song_count} song${p.song_count !== 1 ? 's' : ''} · ${p.comment_count} comment${p.comment_count !== 1 ? 's' : ''} · ${new Date(p.created_at).toLocaleDateString()}
+          ${p.song_count} song${p.song_count !== 1 ? 's' : ''} · ${p.comment_count} comment${p.comment_count !== 1 ? 's' : ''} · ${new Date(p.created_at).toLocaleString()}
         </div>
       </div>
       <code class="text-xs text-gray-500">${p.share_link}</code>
@@ -193,7 +193,7 @@ function renderVersionsList(versions) {
           class="text-xs text-gray-400 hover:text-white transition">&#9998;</button>
         <button onclick="event.stopPropagation(); deleteVersion(${v.id}, ${v.version_number})"
           class="text-xs text-red-400/60 hover:text-red-400 transition">&#10005;</button>
-        <span class="text-xs text-gray-500">${new Date(v.created_at).toLocaleDateString()}</span>
+        <span class="text-xs text-gray-500">${new Date(v.created_at).toLocaleString()}</span>
       </div>
     </div>`;
   }).join('');
@@ -304,7 +304,7 @@ function renderComments() {
         <button onclick="deleteComment(${c.id})" class="text-xs text-red-400/60 hover:text-red-400 transition">&#10005;</button>
       </div>
       <p class="text-sm text-gray-400 ${c.solved ? 'line-through' : ''}">${esc(c.text)}</p>
-      ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${new Date(r.created_at).toLocaleDateString()}</span></div>`).join('') : ''}
+      ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${new Date(r.created_at).toLocaleString()}</span></div>`).join('') : ''}
       <div class="mt-2">
         <button onclick="toggleReplyInput(${c.id})" class="text-xs text-accent hover:text-indigo-400 transition">Reply</button>
       </div>
