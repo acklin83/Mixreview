@@ -51,8 +51,10 @@ function showDashboard() { $('login-screen').classList.add('hidden'); $('dashboa
 $('login-form').addEventListener('submit', async (e) => {
   e.preventDefault(); $('login-error').classList.add('hidden');
   try {
+    const loginUsername = $('username').value;
     const data = await api(isSetupMode ? '/admin/auth/setup' : '/admin/auth/login',
-      { method: 'POST', json: { username: $('username').value, password: $('password').value } });
+      { method: 'POST', json: { username: loginUsername, password: $('password').value } });
+    localStorage.setItem('mixreaview_admin_name', loginUsername);
     token = data.access_token; localStorage.setItem('token', token); showDashboard();
   } catch (err) { $('login-error').textContent = err.message; $('login-error').classList.remove('hidden'); }
 });
@@ -344,7 +346,8 @@ window.toggleReplyInput = function(commentId) {
 window.submitReply = async function(commentId) {
   const text = document.getElementById(`reply-text-${commentId}`).value.trim();
   if (!text) return;
-  await api(`/api/projects/${currentProject.share_link}/comments/${commentId}/reply`, { method: 'POST', json: { author_name: 'Admin', text } });
+  const replyAuthor = localStorage.getItem('mixreaview_admin_name') || 'Admin';
+  await api(`/api/projects/${currentProject.share_link}/comments/${commentId}/reply`, { method: 'POST', json: { author_name: replyAuthor, text } });
   await loadComments(currentVersion.id);
 };
 
