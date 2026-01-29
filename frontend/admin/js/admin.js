@@ -46,7 +46,12 @@ async function checkSetupNeeded() {
 }
 
 function showLogin() { $('login-screen').classList.remove('hidden'); $('dashboard').classList.add('hidden'); checkSetupNeeded(); }
-function showDashboard() { $('login-screen').classList.add('hidden'); $('dashboard').classList.remove('hidden'); showProjects(); }
+function showDashboard() {
+  $('login-screen').classList.add('hidden'); $('dashboard').classList.remove('hidden');
+  const storedName = localStorage.getItem('mixreaview_admin_name');
+  if (storedName) $('admin-author-name').value = storedName;
+  showProjects();
+}
 
 $('login-form').addEventListener('submit', async (e) => {
   e.preventDefault(); $('login-error').classList.add('hidden');
@@ -55,7 +60,9 @@ $('login-form').addEventListener('submit', async (e) => {
     const data = await api(isSetupMode ? '/admin/auth/setup' : '/admin/auth/login',
       { method: 'POST', json: { username: loginUsername, password: $('password').value } });
     localStorage.setItem('mixreaview_admin_name', loginUsername);
-    token = data.access_token; localStorage.setItem('token', token); showDashboard();
+    token = data.access_token; localStorage.setItem('token', token);
+    $('admin-author-name').value = loginUsername;
+    showDashboard();
   } catch (err) { $('login-error').textContent = err.message; $('login-error').classList.remove('hidden'); }
 });
 $('logout-btn').addEventListener('click', () => { token = null; localStorage.removeItem('token'); destroyPlayer(); showLogin(); });
@@ -160,7 +167,7 @@ window.openSong = async function(songId) {
   if (song.versions.length > 0) {
     const target = currentVersion && song.versions.find(v => v.id === currentVersion.id)
       ? song.versions.find(v => v.id === currentVersion.id)
-      : song.versions[song.versions.length - 1];
+      : (song.versions.find(v => v.favourite) || song.versions[song.versions.length - 1]);
     playVersion(target);
   } else {
     $('player-area').classList.add('hidden');
@@ -182,6 +189,9 @@ function renderVersionsList(versions) {
       ${currentVersion && currentVersion.id === v.id ? 'bg-accent/10 border border-accent/30' : 'bg-dark-800 hover:bg-dark-700'}"
          onclick="playVersion(${JSON.stringify(v).replace(/"/g, '&quot;')})">
       <div class="flex items-center gap-2">
+        <button onclick="event.stopPropagation(); toggleFavourite(${v.id})"
+          class="text-lg leading-none transition ${v.favourite ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400/60'}"
+          title="Set as favourite">${v.favourite ? '★' : '☆'}</button>
         <span class="font-mono text-accent text-sm">v${v.version_number}</span>
         <span class="text-sm">${esc(v.label)}</span>
         ${unsolved > 0 ? `<span class="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">${unsolved} open</span>` : ''}
@@ -230,6 +240,11 @@ window.deleteVersion = async function(versionId, versionNumber) {
   if (!confirm(`Delete version v${versionNumber}?`)) return;
   await api(`/admin/versions/${versionId}`, { method: 'DELETE' });
   if (currentVersion && currentVersion.id === versionId) { currentVersion = null; destroyPlayer(); }
+  openSong(currentSong.id);
+};
+
+window.toggleFavourite = async function(versionId) {
+  await api(`/admin/versions/${versionId}/favourite`, { method: 'PATCH' });
   openSong(currentSong.id);
 };
 

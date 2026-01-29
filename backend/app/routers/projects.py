@@ -49,6 +49,29 @@ def get_project_by_link(
     }
 
 
+@router.patch("/api/projects/{share_link}/versions/{version_id}/favourite")
+def toggle_favourite_client(
+    share_link: str,
+    version_id: int,
+    db: Session = Depends(get_db),
+):
+    project = get_project_by_share_link(share_link, db)
+    version = db.query(Version).filter(Version.id == version_id).first()
+    if version is None:
+        raise HTTPException(status_code=404, detail="Version not found")
+    # Verify version belongs to this project
+    song = db.query(Song).filter(Song.id == version.song_id).first()
+    if song is None or song.project_id != project.id:
+        raise HTTPException(status_code=404, detail="Version not found in this project")
+    if version.favourite:
+        version.favourite = False
+    else:
+        db.query(Version).filter(Version.song_id == version.song_id).update({"favourite": False})
+        version.favourite = True
+    db.commit()
+    return {"ok": True, "favourite": version.favourite}
+
+
 @router.get("/api/audio/{version_id}")
 def stream_audio(
     version_id: int,

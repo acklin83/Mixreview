@@ -294,7 +294,11 @@ local function api_load_project()
     selected_song_idx = #songs > 0 and 1 or 0
     selected_version_idx = 0
     if selected_song_idx > 0 and songs[selected_song_idx].versions then
-      selected_version_idx = #songs[selected_song_idx].versions > 0 and #songs[selected_song_idx].versions or 0
+      local versions = songs[selected_song_idx].versions
+      selected_version_idx = #versions > 0 and #versions or 0
+      for vi, ver in ipairs(versions) do
+        if ver.favourite then selected_version_idx = vi; break end
+      end
     end
     share_link = share_link_input
     comments = {}
@@ -463,7 +467,11 @@ local function draw_song_version_section()
       if reaper.ImGui_Selectable(ctx, song.title, i == selected_song_idx) then
         selected_song_idx = i
         local versions = songs[i].versions or {}
+        -- Prefer favourite version, fallback to newest
         selected_version_idx = #versions > 0 and #versions or 0
+        for vi, ver in ipairs(versions) do
+          if ver.favourite then selected_version_idx = vi; break end
+        end
         api_load_comments()
       end
     end
@@ -474,12 +482,13 @@ local function draw_song_version_section()
 
   local versions = current_song and current_song.versions or {}
   local current_ver = versions[selected_version_idx]
-  local ver_label = current_ver and ("v" .. tostring(current_ver.version_number)) or "v?"
+  local ver_label = current_ver and ("v" .. tostring(current_ver.version_number) .. (current_ver.favourite and " \u2605" or "")) or "v?"
   reaper.ImGui_SetNextItemWidth(ctx, -1)
   if reaper.ImGui_BeginCombo(ctx, "##version", ver_label) then
     for i, ver in ipairs(versions) do
       local label = "v" .. tostring(ver.version_number)
       if ver.label and ver.label ~= "" then label = label .. " - " .. ver.label end
+      if ver.favourite then label = label .. " \u2605" end
       if reaper.ImGui_Selectable(ctx, label, i == selected_version_idx) then
         selected_version_idx = i
         api_load_comments()

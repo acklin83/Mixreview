@@ -63,6 +63,7 @@ class Version(Base):
     label: Mapped[str] = mapped_column(String(200), nullable=False, default="")
     file_path: Mapped[str] = mapped_column(String(500), nullable=False)
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    favourite: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
     song: Mapped["Song"] = relationship(back_populates="versions")

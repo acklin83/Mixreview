@@ -148,7 +148,7 @@ window.openSong = function(songId) {
   if (song.versions.length > 0) {
     const target = currentVersion && song.versions.find(v => v.id === currentVersion.id)
       ? song.versions.find(v => v.id === currentVersion.id)
-      : song.versions[song.versions.length - 1];
+      : (song.versions.find(v => v.favourite) || song.versions[song.versions.length - 1]);
     playVersion(target);
   } else {
     $('player-area').classList.add('hidden');
@@ -170,9 +170,12 @@ function renderVersionsList(versions) {
     <div class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition
       ${currentVersion && currentVersion.id === v.id ? 'bg-accent/10 border border-accent/30' : 'bg-dark-800 hover:bg-dark-700'}"
          onclick="playVersion(${JSON.stringify(v).replace(/"/g, '&quot;')})">
-      <div>
+      <div class="flex items-center gap-2">
+        <button onclick="event.stopPropagation(); toggleFavourite(${v.id})"
+          class="text-lg leading-none transition ${v.favourite ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400/60'}"
+          title="Set as favourite">${v.favourite ? '★' : '☆'}</button>
         <span class="font-mono text-accent text-sm">v${v.version_number}</span>
-        <span class="ml-2 text-sm">${esc(v.label)}</span>
+        <span class="text-sm">${esc(v.label)}</span>
       </div>
       <div class="flex items-center gap-3">
         <a href="/api/audio/${v.id}" download="${esc(v.original_filename)}"
@@ -182,6 +185,14 @@ function renderVersionsList(versions) {
     </div>
   `).join('');
 }
+
+window.toggleFavourite = async function(versionId) {
+  await fetch(`/api/projects/${shareLink}/versions/${versionId}/favourite`, { method: 'PATCH' });
+  // Reload project data to refresh favourite state
+  project = await api(`/api/projects/${shareLink}`);
+  const song = project.songs.find(s => s.id === currentSong.id);
+  if (song) { currentSong = song; renderVersionsList(song.versions); }
+};
 
 window.playVersion = function(version) {
   currentVersion = version;

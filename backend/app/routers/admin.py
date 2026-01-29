@@ -246,6 +246,25 @@ def update_version(
     return {"ok": True}
 
 
+@router.patch("/versions/{version_id}/favourite")
+def toggle_favourite(
+    version_id: int,
+    _admin: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    version = db.query(Version).filter(Version.id == version_id).first()
+    if version is None:
+        raise HTTPException(status_code=404, detail="Version not found")
+    if version.favourite:
+        version.favourite = False
+    else:
+        # Unset all others in same song, set this one
+        db.query(Version).filter(Version.song_id == version.song_id).update({"favourite": False})
+        version.favourite = True
+    db.commit()
+    return {"ok": True, "favourite": version.favourite}
+
+
 @router.delete("/songs/{song_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_song(
     song_id: int,
