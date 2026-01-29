@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - ./frontend:/frontend
+      - ./data:/data
+    environment:
+      - MIXREVIEW_SECRET_KEY=${MIXREVIEW_SECRET_KEY:-change-me-to-a-random-secret}
+    restart: unless-stopped
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data/uploads:/data/uploads:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
