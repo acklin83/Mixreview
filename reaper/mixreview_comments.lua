@@ -188,7 +188,9 @@ if author_name == "" then author_name = "Frank" end
 if username == "" then username = "admin" end
 
 -- Session state
-local password = ""
+local password = reaper.GetExtState("Mix Reaview", "password")
+if password == nil then password = "" end
+local remember_password = (password ~= "")
 local jwt_token = ""
 local logged_in = false
 local login_error = ""
@@ -244,6 +246,11 @@ local function save_state()
   reaper.SetExtState("Mix Reaview", "author_name", author_name, true)
   reaper.SetExtState("Mix Reaview", "username", username, true)
   reaper.SetExtState("Mix Reaview", "last_share_link", share_link_input, true)
+  if remember_password then
+    reaper.SetExtState("Mix Reaview", "password", password, true)
+  else
+    reaper.DeleteExtState("Mix Reaview", "password", true)
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -373,6 +380,7 @@ local function draw_login_section()
     if reaper.ImGui_Button(ctx, "Logout") then
       logged_in = false
       jwt_token = ""
+      if not remember_password then password = "" end
     end
     return
   end
@@ -386,6 +394,10 @@ local function draw_login_section()
 
   reaper.ImGui_Text(ctx, "Password:")
   changed, password = reaper.ImGui_InputText(ctx, "##password", password, reaper.ImGui_InputTextFlags_Password())
+
+  local rem_changed
+  rem_changed, remember_password = reaper.ImGui_Checkbox(ctx, "Remember me", remember_password)
+  if rem_changed then save_state() end
 
   if reaper.ImGui_Button(ctx, "Login") then
     api_login()
