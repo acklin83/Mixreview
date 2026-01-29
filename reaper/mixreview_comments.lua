@@ -552,9 +552,8 @@ local function draw_comments_section()
     api_load_comments()
   end
 
-  -- Scrollable comment list
-  local avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-  if reaper.ImGui_BeginChild(ctx, "##comments_scroll", 0, avail_h, 0) then
+  -- Scrollable comment list (0 height = use remaining space)
+  if reaper.ImGui_BeginChild(ctx, "##comments_scroll", 0, 0, 0) then
 
     local offset = get_current_offset()
     for _, c in ipairs(comments) do
@@ -564,11 +563,6 @@ local function draw_comments_section()
 
       if show then
         reaper.ImGui_PushID(ctx, c.id)
-
-        -- Background color based on status
-        local bg_col = c.solved and COL_BG_SOLVED or COL_BG_OPEN
-        local sx, sy = reaper.ImGui_GetCursorScreenPos(ctx)
-        local avail_w2 = reaper.ImGui_GetContentRegionAvail(ctx)
 
         -- Timecode button (clickable = jump)
         if c.solved then

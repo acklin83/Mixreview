@@ -177,7 +177,7 @@ function renderVersionsList(versions) {
       <div class="flex items-center gap-3">
         <a href="/api/audio/${v.id}" download="${esc(v.original_filename)}"
            onclick="event.stopPropagation()" class="text-xs text-gray-400 hover:text-white transition">Download</a>
-        <span class="text-xs text-gray-500">${new Date(v.created_at).toLocaleDateString()}</span>
+        <span class="text-xs text-gray-500">${new Date(v.created_at).toLocaleString()}</span>
       </div>
     </div>
   `).join('');
@@ -261,10 +261,10 @@ function renderComments() {
         </button>
         <span class="text-sm font-medium text-gray-300">${esc(c.author_name)}</span>
         ${c.solved ? '<span class="text-xs text-green-400 ml-auto">✓ Solved</span>' : ''}
-        <span class="text-xs text-gray-600 ${c.solved ? '' : 'ml-auto'}">${new Date(c.created_at).toLocaleDateString()}</span>
+        <span class="text-xs text-gray-600 ${c.solved ? '' : 'ml-auto'}">${new Date(c.created_at).toLocaleString()}</span>
       </div>
       <p class="text-sm text-gray-400 ${c.solved ? 'line-through' : ''}">${esc(c.text)}</p>
-      ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${new Date(r.created_at).toLocaleDateString()}</span></div>`).join('') : ''}
+      ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${new Date(r.created_at).toLocaleString()}</span></div>`).join('') : ''}
       <div class="mt-2">
         <button onclick="toggleReplyInput(${c.id})" class="text-xs text-accent hover:text-indigo-400 transition">Reply</button>
       </div>
