@@ -264,7 +264,17 @@ function renderComments() {
         <span class="text-xs text-gray-600 ${c.solved ? '' : 'ml-auto'}">${new Date(c.created_at).toLocaleDateString()}</span>
       </div>
       <p class="text-sm text-gray-400 ${c.solved ? 'line-through' : ''}">${esc(c.text)}</p>
-      ${c.reply_text ? `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(c.reply_text)}</p><span class="text-xs text-gray-500">— Admin</span></div>` : ''}
+      ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${new Date(r.created_at).toLocaleDateString()}</span></div>`).join('') : ''}
+      <div class="mt-2">
+        <button onclick="toggleReplyInput(${c.id})" class="text-xs text-accent hover:text-indigo-400 transition">Reply</button>
+      </div>
+      <div id="reply-input-${c.id}" class="hidden mt-2 flex gap-2">
+        <input type="text" id="reply-text-${c.id}" placeholder="Write a reply..."
+          class="flex-1 px-2 py-1 bg-dark-700 border border-dark-600 rounded text-sm focus:border-accent focus:outline-none">
+        <input type="text" id="reply-author-${c.id}" placeholder="Your name"
+          class="w-24 px-2 py-1 bg-dark-700 border border-dark-600 rounded text-sm focus:border-accent focus:outline-none">
+        <button onclick="submitReply(${c.id})" class="px-3 py-1 bg-accent hover:bg-indigo-600 rounded text-xs font-medium transition">Send</button>
+      </div>
     </div>
   `).join('');
 }
@@ -285,6 +295,31 @@ function renderCommentMarkers() {
 }
 
 window.jumpTo = function(s) { if (ws && ws.getDuration()) ws.seekTo(s / ws.getDuration()); };
+
+window.toggleReplyInput = function(commentId) {
+  const el = document.getElementById(`reply-input-${commentId}`);
+  el.classList.toggle('hidden');
+  if (!el.classList.contains('hidden')) {
+    const authorInput = document.getElementById(`reply-author-${commentId}`);
+    const saved = localStorage.getItem('mixreview_author') || '';
+    if (saved && !authorInput.value) authorInput.value = saved;
+    document.getElementById(`reply-text-${commentId}`).focus();
+  }
+};
+
+window.submitReply = async function(commentId) {
+  const text = document.getElementById(`reply-text-${commentId}`).value.trim();
+  const author = document.getElementById(`reply-author-${commentId}`).value.trim();
+  if (!text || !author) return;
+  try {
+    await fetch(`/api/projects/${shareLink}/comments/${commentId}/reply`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author_name: author, text })
+    });
+    localStorage.setItem('mixreview_author', author);
+    await loadComments(currentVersion.id);
+  } catch (err) { alert('Failed to reply: ' + err.message); }
+};
 
 $('comment-submit').addEventListener('click', submitComment);
 $('comment-text').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitComment(); });

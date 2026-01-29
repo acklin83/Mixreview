@@ -302,12 +302,12 @@ function renderComments() {
         <button onclick="deleteComment(${c.id})" class="text-xs text-red-400/60 hover:text-red-400 transition">&#10005;</button>
       </div>
       <p class="text-sm text-gray-400 ${c.solved ? 'line-through' : ''}">${esc(c.text)}</p>
-      ${c.reply_text ? `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(c.reply_text)}</p><span class="text-xs text-gray-500">— Admin</span></div>` : ''}
+      ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${new Date(r.created_at).toLocaleDateString()}</span></div>`).join('') : ''}
       <div class="mt-2">
-        <button onclick="toggleReplyInput(${c.id})" class="text-xs text-accent hover:text-indigo-400 transition">${c.reply_text ? 'Edit Reply' : 'Reply'}</button>
+        <button onclick="toggleReplyInput(${c.id})" class="text-xs text-accent hover:text-indigo-400 transition">Reply</button>
       </div>
       <div id="reply-input-${c.id}" class="hidden mt-2 flex gap-2">
-        <input type="text" id="reply-text-${c.id}" value="${c.reply_text ? escAttr(c.reply_text) : ''}" placeholder="Write a reply..."
+        <input type="text" id="reply-text-${c.id}" placeholder="Write a reply..."
           class="flex-1 px-2 py-1 bg-dark-700 border border-dark-600 rounded text-sm focus:border-accent focus:outline-none">
         <button onclick="submitReply(${c.id})" class="px-3 py-1 bg-accent hover:bg-indigo-600 rounded text-xs font-medium transition">Save</button>
       </div>
@@ -343,7 +343,8 @@ window.toggleReplyInput = function(commentId) {
 
 window.submitReply = async function(commentId) {
   const text = document.getElementById(`reply-text-${commentId}`).value.trim();
-  await api(`/admin/comments/${commentId}`, { method: 'PUT', json: { reply_text: text || '' } });
+  if (!text) return;
+  await api(`/api/projects/${currentProject.share_link}/comments/${commentId}/reply`, { method: 'POST', json: { author_name: 'Admin', text } });
   await loadComments(currentVersion.id);
 };
 
