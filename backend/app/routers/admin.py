@@ -294,8 +294,6 @@ def update_comment(
         comment.text = req.text
     if req.solved is not None:
         comment.solved = req.solved
-    if req.reply_text is not None:
-        comment.reply_text = req.reply_text
     db.commit()
     db.refresh(comment)
     return comment

@@ -91,6 +91,11 @@ class CommentCreate(BaseModel):
     text: str = Field(min_length=1, max_length=5000)
 
 
+class CommentUpdate(BaseModel):
+    text: str | None = None
+    solved: bool | None = None
+
+
 class ReplyCreate(BaseModel):
     author_name: str = Field(min_length=1, max_length=100)
     text: str = Field(min_length=1, max_length=5000)
