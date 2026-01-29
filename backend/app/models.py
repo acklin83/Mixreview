@@ -78,10 +78,22 @@ class Comment(Base):
     author_name: Mapped[str] = mapped_column(String(100), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     solved: Mapped[bool] = mapped_column(Boolean, default=False)
-    reply_text: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
     version: Mapped["Version"] = relationship(back_populates="comments")
+    replies: Mapped[list["Reply"]] = relationship(back_populates="comment", cascade="all, delete-orphan", order_by="Reply.created_at")
+
+
+class Reply(Base):
+    __tablename__ = "replies"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    comment_id: Mapped[int] = mapped_column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), index=True)
+    author_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+    comment: Mapped["Comment"] = relationship(back_populates="replies")
 
 
 class AppSettings(Base):
@@ -98,4 +110,5 @@ class AppSettings(Base):
     waveform_progress_color: Mapped[str] = mapped_column(String(7), default="#6366f1")
     logo_path: Mapped[str | None] = mapped_column(String(500), nullable=True, default=None)
     logo_height: Mapped[int] = mapped_column(Integer, default=32)
+    clients_can_resolve: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
