@@ -29,6 +29,7 @@ Project
             ├─ id
             ├─ version_number (v1, v2, v3...)
             ├─ file_path
+            ├─ favourite (boolean, one per song)
             ├─ created_at
             └─ Comments[]
                  ├─ id
@@ -215,6 +216,7 @@ PUT    /admin/projects/{id}
 DELETE /admin/projects/{id}
 POST   /admin/projects/{id}/songs
 POST   /admin/songs/{id}/versions
+PATCH  /admin/versions/{id}/favourite       # Toggle favourite (one per song)
 POST   /admin/upload
 ```
 
@@ -225,6 +227,7 @@ GET    /api/projects/{short-uuid}                       # Project metadata
 GET    /api/projects/{short-uuid}/songs/{song_id}       # Song details
 GET    /api/projects/{short-uuid}/versions              # All versions
 GET    /api/audio/{version_id}                          # Audio file streaming
+PATCH  /api/projects/{uuid}/versions/{id}/favourite     # Toggle favourite (client)
 POST   /api/projects/{short-uuid}/comments              # Post comment
 GET    /api/projects/{short-uuid}/comments              # Get all comments
 ```
