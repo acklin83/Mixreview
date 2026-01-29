@@ -9,7 +9,8 @@ A self-hosted audio review platform for studios. Clients listen to mix versions 
 - **Timeline Comments** - Precise timecode-based comments (@0:45) with nested replies
 - **Share Links** - UUID-based, no client accounts needed
 - **Version Management** - Auto-incrementing versions per song (v1, v2, v3...)
-- **Resolve Workflow** - Mark comments as solved/resolved
+- **Favourite Versions** - Star ★ your preferred version per song (auto-selected on song switch)
+- **Done Workflow** - Mark comments as done/resolved
 - **REAPER Integration** - ReaImGui script for managing comments directly from your DAW
 - **Admin Interface** - Upload management, project organization, theming
 
@@ -99,6 +100,7 @@ GET  /admin/projects            # List projects
 POST /admin/projects            # Create project
 POST /admin/projects/{id}/songs # Add song
 POST /admin/songs/{id}/versions # Upload version
+PATCH /admin/versions/{id}/favourite  # Toggle favourite
 ```
 
 ### Client (share link)
@@ -108,6 +110,7 @@ GET  /api/projects/{uuid}/comments                 # Comments + replies
 POST /api/projects/{uuid}/comments                 # New comment
 POST /api/projects/{uuid}/comments/{id}/reply      # Reply to comment
 PATCH /api/projects/{uuid}/comments/{id}/resolve   # Toggle resolved (admin)
+PATCH /api/projects/{uuid}/versions/{id}/favourite  # Toggle favourite
 ```
 
 ---
