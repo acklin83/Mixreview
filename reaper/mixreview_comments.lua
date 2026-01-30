@@ -348,8 +348,13 @@ local function api_load_project()
       end
     end
     share_link = share_link_input
-    comments = {}
     save_state()
+    -- Auto-load comments for selected version
+    if selected_version_idx > 0 then
+      api_load_comments()
+    else
+      comments = {}
+    end
   else
     error_msg = "Failed to load project (HTTP " .. tostring(status) .. ")"
     project_data = nil

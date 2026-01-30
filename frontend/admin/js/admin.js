@@ -122,7 +122,7 @@ function renderSongsList(songs) {
       <div>
         <div class="font-medium">${esc(s.title)}</div>
         <div class="text-sm text-gray-500 mt-1">
-          ${s.version_count} version${s.version_count !== 1 ? 's' : ''} · ${s.open_count > 0 ? `<span class="text-amber-400">${s.open_count} open</span>` : '<span class="text-green-400">All resolved</span>'}
+          ${s.version_count} version${s.version_count !== 1 ? 's' : ''} · ${s.open_count > 0 ? `<span class="text-amber-400">💬${s.open_count}</span>` : '<span class="text-green-400">✓</span>'}
         </div>
       </div>
       <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -194,7 +194,7 @@ function renderVersionsList(versions) {
           title="Set as favourite">${v.favourite ? '★' : '☆'}</button>
         <span class="font-mono text-accent text-sm">v${v.version_number}</span>
         <span class="text-sm">${esc(v.label)}</span>
-        ${unsolved > 0 ? `<span class="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">${unsolved} open</span>` : ''}
+        ${unsolved > 0 ? `<span class="text-xs text-amber-400" title="${unsolved} open comments">💬${unsolved}</span>` : ''}
       </div>
       <div class="flex items-center gap-3">
         <a href="/api/audio/${v.id}" download="${esc(v.original_filename)}"
@@ -310,13 +310,13 @@ function renderComments() {
           @${formatTime(c.timecode)}
         </button>
         <span class="text-sm font-medium text-gray-300">${esc(c.author_name)}</span>
-        <label class="ml-auto flex items-center gap-1 cursor-pointer min-h-[44px] px-1">
+        <label class="ml-auto flex items-center gap-1 cursor-pointer">
           <input type="checkbox" ${c.solved ? 'checked' : ''} onchange="toggleSolved(${c.id}, this.checked)"
-            class="accent-green-500 w-4 h-4">
+            class="accent-green-500">
           <span class="text-xs ${c.solved ? 'text-green-400' : 'text-gray-500'}">Done</span>
         </label>
-        <button onclick="editComment(${c.id}, '${escAttr(c.text)}')" class="text-sm text-gray-400 hover:text-white transition ml-1 min-w-[44px] min-h-[44px] inline-flex items-center justify-center">&#9998;</button>
-        <button onclick="deleteComment(${c.id})" class="text-sm text-red-400/60 hover:text-red-400 transition min-w-[44px] min-h-[44px] inline-flex items-center justify-center">&#10005;</button>
+        <button onclick="editComment(${c.id}, '${escAttr(c.text)}')" class="text-xs md:text-xs text-gray-400 hover:text-white transition ml-1 touch-btn">&#9998;</button>
+        <button onclick="deleteComment(${c.id})" class="text-xs md:text-xs text-red-400/60 hover:text-red-400 transition touch-btn">&#10005;</button>
       </div>
       <p class="text-sm text-gray-400 ${c.solved ? 'line-through' : ''}">${esc(c.text)}</p>
       ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${formatDate(r.created_at)}</span></div>`).join('') : ''}
