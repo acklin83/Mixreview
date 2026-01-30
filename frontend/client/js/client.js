@@ -398,7 +398,8 @@ function esc(str) { const d = document.createElement('div'); d.textContent = str
 
 // --- Theme Toggle ---
 function updateThemeIcon() {
-  $('theme-toggle-btn').textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+  $('theme-icon-moon').classList.toggle('hidden', currentTheme !== 'dark');
+  $('theme-icon-sun').classList.toggle('hidden', currentTheme !== 'light');
 }
 $('theme-toggle-btn').addEventListener('click', () => {
   currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
