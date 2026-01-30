@@ -27,11 +27,14 @@
     .fade-in { animation: fadeIn 0.2s ease-in; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .comment-marker {
-      width: 12px; margin-left: -4px; height: 100%; background: #f59e0b;
-      position: absolute; top: 0; cursor: pointer; opacity: 0.6; z-index: 10;
-      border-radius: 2px;
+      width: 3px; height: 100%; background: #f59e0b;
+      position: absolute; top: 0; cursor: pointer; opacity: 0.8; z-index: 10;
     }
     .comment-marker:hover { opacity: 1; }
+    .touch-btn { display: inline-flex; align-items: center; justify-content: center; }
+    @media (max-width: 767px) {
+      .touch-btn { min-width: 44px; min-height: 44px; font-size: 1.1rem; }
+    }
     select.styled {
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
@@ -92,15 +95,14 @@
     <!-- View 2: Project Detail (songs list) -->
     <div id="project-view" class="hidden max-w-5xl mx-auto p-6 fade-in">
       <button id="back-to-projects" class="text-sm text-gray-400 hover:text-white mb-4 transition">&larr; Back to Projects</button>
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-2">
         <h2 id="project-title" class="text-2xl font-bold cursor-pointer hover:text-accent transition" title="Click to rename"></h2>
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2 bg-dark-700 rounded px-3 py-1.5">
-            <span class="text-xs text-gray-400">Share:</span>
-            <code id="share-link" class="text-sm text-accent"></code>
-            <button id="copy-link-btn" class="text-xs text-gray-400 hover:text-white transition">Copy</button>
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="flex items-center gap-2 bg-dark-700 rounded px-3 py-1.5 min-w-0">
+            <code id="share-link" class="text-xs text-accent truncate"></code>
+            <button id="copy-link-btn" class="text-xs text-gray-400 hover:text-white transition shrink-0">Copy</button>
           </div>
-          <button id="delete-project-btn" class="text-sm text-red-400 hover:text-red-300 transition">Delete</button>
+          <button id="delete-project-btn" class="text-sm text-red-400 hover:text-red-300 transition shrink-0">Delete</button>
         </div>
       </div>
       <div class="flex items-center justify-between mb-3">
