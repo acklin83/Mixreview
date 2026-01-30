@@ -89,7 +89,7 @@ async function showProjects() {
       <div>
         <div class="font-medium">${esc(p.title)}</div>
         <div class="text-sm text-gray-500 mt-1">
-          ${p.song_count} song${p.song_count !== 1 ? 's' : ''} · ${p.comment_count} comment${p.comment_count !== 1 ? 's' : ''} · ${new Date(p.created_at).toLocaleString()}
+          ${p.song_count} song${p.song_count !== 1 ? 's' : ''} · ${p.comment_count} comment${p.comment_count !== 1 ? 's' : ''} · ${formatDate(p.created_at)}
         </div>
       </div>
       <code class="text-xs text-gray-500">${p.share_link}</code>
@@ -122,7 +122,7 @@ function renderSongsList(songs) {
       <div>
         <div class="font-medium">${esc(s.title)}</div>
         <div class="text-sm text-gray-500 mt-1">
-          ${s.version_count} version${s.version_count !== 1 ? 's' : ''} · ${s.comment_count} comment${s.comment_count !== 1 ? 's' : ''}
+          ${s.version_count} version${s.version_count !== 1 ? 's' : ''} · ${s.open_count > 0 ? `<span class="text-amber-400">${s.open_count} open</span>` : '<span class="text-green-400">All resolved</span>'}
         </div>
       </div>
       <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -203,7 +203,7 @@ function renderVersionsList(versions) {
           class="text-xs text-gray-400 hover:text-white transition">&#9998;</button>
         <button onclick="event.stopPropagation(); deleteVersion(${v.id}, ${v.version_number})"
           class="text-xs text-red-400/60 hover:text-red-400 transition">&#10005;</button>
-        <span class="text-xs text-gray-500">${new Date(v.created_at).toLocaleString()}</span>
+        <span class="text-xs text-gray-500">${formatDate(v.created_at)}</span>
       </div>
     </div>`;
   }).join('');
@@ -306,27 +306,30 @@ function renderComments() {
     <div class="bg-dark-800 rounded-lg p-3 mb-2 ${c.solved ? 'opacity-50' : ''}">
       <div class="flex items-center gap-2 mb-1">
         <button onclick="jumpTo(${c.timecode})"
-          class="text-xs font-mono text-amber-400 bg-dark-700 px-2 py-0.5 rounded hover:bg-dark-600 transition">
+          class="text-xs font-mono text-amber-400 bg-dark-700 px-2 py-1.5 rounded hover:bg-dark-600 transition min-h-[44px] min-w-[44px] inline-flex items-center justify-center">
           @${formatTime(c.timecode)}
         </button>
         <span class="text-sm font-medium text-gray-300">${esc(c.author_name)}</span>
-        <label class="ml-auto flex items-center gap-1 cursor-pointer">
+        <label class="ml-auto flex items-center gap-1 cursor-pointer min-h-[44px] px-1">
           <input type="checkbox" ${c.solved ? 'checked' : ''} onchange="toggleSolved(${c.id}, this.checked)"
-            class="accent-green-500">
+            class="accent-green-500 w-4 h-4">
           <span class="text-xs ${c.solved ? 'text-green-400' : 'text-gray-500'}">Done</span>
         </label>
-        <button onclick="editComment(${c.id}, '${escAttr(c.text)}')" class="text-xs text-gray-400 hover:text-white transition ml-1">&#9998;</button>
-        <button onclick="deleteComment(${c.id})" class="text-xs text-red-400/60 hover:text-red-400 transition">&#10005;</button>
+        <button onclick="editComment(${c.id}, '${escAttr(c.text)}')" class="text-sm text-gray-400 hover:text-white transition ml-1 min-w-[44px] min-h-[44px] inline-flex items-center justify-center">&#9998;</button>
+        <button onclick="deleteComment(${c.id})" class="text-sm text-red-400/60 hover:text-red-400 transition min-w-[44px] min-h-[44px] inline-flex items-center justify-center">&#10005;</button>
       </div>
       <p class="text-sm text-gray-400 ${c.solved ? 'line-through' : ''}">${esc(c.text)}</p>
-      ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${new Date(r.created_at).toLocaleString()}</span></div>`).join('') : ''}
+      ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${formatDate(r.created_at)}</span></div>`).join('') : ''}
       <div class="mt-2">
-        <button onclick="toggleReplyInput(${c.id})" class="text-xs text-accent hover:text-indigo-400 transition">Reply</button>
+        <button onclick="toggleReplyInput(${c.id})" class="text-sm text-accent hover:text-indigo-400 transition py-2 px-3 min-h-[44px]">Reply</button>
       </div>
-      <div id="reply-input-${c.id}" class="hidden mt-2 flex gap-2">
+      <div id="reply-input-${c.id}" class="hidden mt-2 rounded-lg p-3" style="background:#2d2d2d;">
         <input type="text" id="reply-text-${c.id}" placeholder="Write a reply..."
-          class="flex-1 px-2 py-1 bg-dark-700 border border-dark-600 rounded text-sm focus:border-accent focus:outline-none">
-        <button onclick="submitReply(${c.id})" class="px-3 py-1 bg-accent hover:bg-indigo-600 rounded text-xs font-medium transition">Save</button>
+          class="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded text-sm focus:border-accent focus:outline-none mb-2">
+        <div class="flex gap-2 items-center">
+          <button onclick="submitReply(${c.id})" class="px-4 py-2 bg-accent hover:bg-indigo-600 rounded text-sm font-medium transition">Send</button>
+          <button onclick="closeReplyInput(${c.id})" class="px-3 py-2 text-gray-400 hover:text-white text-sm transition">Cancel</button>
+        </div>
       </div>
     </div>
   `).join('');
@@ -353,9 +356,16 @@ window.deleteComment = async function(commentId) {
 };
 
 window.toggleReplyInput = function(commentId) {
+  document.querySelectorAll('[id^="reply-input-"]').forEach(el => {
+    if (el.id !== `reply-input-${commentId}`) el.classList.add('hidden');
+  });
   const el = document.getElementById(`reply-input-${commentId}`);
   el.classList.toggle('hidden');
   if (!el.classList.contains('hidden')) document.getElementById(`reply-text-${commentId}`).focus();
+};
+
+window.closeReplyInput = function(commentId) {
+  document.getElementById(`reply-input-${commentId}`).classList.add('hidden');
 };
 
 window.submitReply = async function(commentId) {
@@ -461,6 +471,11 @@ $('modal-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('
 // HELPERS
 // ============================================================
 function formatTime(s) { return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`; }
+function formatDate(iso) {
+  const d = new Date(iso);
+  if (window.innerWidth < 768) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString();
+}
 function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 function escAttr(str) { return str.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 

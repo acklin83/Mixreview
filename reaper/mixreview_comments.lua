@@ -177,11 +177,42 @@ end
 local ctx = reaper.ImGui_CreateContext('Mix Reaview Comments')
 local FONT_SIZE = 14
 
+-- Hash function (DJB2) for generating project keys
+local function hash_string(str)
+  local h = 5381
+  for i = 1, #str do
+    h = ((h * 33) + string.byte(str, i)) % 0xFFFFFFFF
+  end
+  return string.format("%08x", h)
+end
+
+-- Per-project linking
+local function get_project_id()
+  local _, project_path = reaper.EnumProjects(-1)
+  if project_path and project_path ~= "" then
+    return hash_string(project_path)
+  end
+  return nil
+end
+
+local reaper_project_id = get_project_id()
+local is_linked = false
+local linked_uuid = ""
+
 -- Persistent state (saved across sessions via ExtState)
 local server_url = reaper.GetExtState("Mix Reaview", "server_url")
 local author_name = reaper.GetExtState("Mix Reaview", "author_name")
 local username = reaper.GetExtState("Mix Reaview", "username")
 local share_link_input = reaper.GetExtState("Mix Reaview", "last_share_link")
+
+-- Check for per-project link
+if reaper_project_id then
+  linked_uuid = reaper.GetExtState("MixReaview_Link", reaper_project_id)
+  if linked_uuid ~= "" then
+    is_linked = true
+    share_link_input = linked_uuid
+  end
+end
 
 if server_url == "" then server_url = "https://mix.stoersender.ch" end
 if author_name == "" then author_name = "Frank" end
@@ -249,6 +280,22 @@ local function save_state()
     reaper.SetExtState("Mix Reaview", "password", password, true)
   else
     reaper.DeleteExtState("Mix Reaview", "password", true)
+  end
+end
+
+local function link_project()
+  if reaper_project_id and share_link_input ~= "" then
+    reaper.SetExtState("MixReaview_Link", reaper_project_id, share_link_input, true)
+    linked_uuid = share_link_input
+    is_linked = true
+  end
+end
+
+local function unlink_project()
+  if reaper_project_id then
+    reaper.DeleteExtState("MixReaview_Link", reaper_project_id, true)
+    linked_uuid = ""
+    is_linked = false
   end
 end
 
@@ -446,6 +493,25 @@ local function draw_project_section()
 
   if project_data then
     reaper.ImGui_TextColored(ctx, COL_ACCENT, project_data.title or "")
+  end
+
+  -- Per-project link status
+  if reaper_project_id then
+    if is_linked then
+      reaper.ImGui_TextColored(ctx, COL_GREEN, "Linked")
+      reaper.ImGui_SameLine(ctx)
+      if reaper.ImGui_SmallButton(ctx, "Unlink") then
+        unlink_project()
+      end
+    else
+      if share_link_input ~= "" and project_data then
+        if reaper.ImGui_SmallButton(ctx, "Link to Project") then
+          link_project()
+        end
+      end
+    end
+  else
+    reaper.ImGui_TextColored(ctx, COL_ORANGE, "Save REAPER project to enable linking")
   end
 
   if error_msg ~= "" then
@@ -677,6 +743,14 @@ local function loop()
 
   if open then
     reaper.defer(loop)
+  end
+end
+
+-- Auto-load linked project on script start
+if is_linked and share_link_input ~= "" then
+  api_load_project()
+  if selected_version_idx > 0 then
+    api_load_comments()
   end
 end
 

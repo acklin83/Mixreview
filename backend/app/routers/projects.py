@@ -24,10 +24,17 @@ def _enrich_songs(songs, db):
             .filter(Version.song_id == s.id)
             .scalar()
         )
+        open_count = (
+            db.query(func.count(Comment.id))
+            .join(Version)
+            .filter(Version.song_id == s.id, Comment.solved == False)
+            .scalar()
+        )
         song_data = SongOut(
             id=s.id, title=s.title, position=s.position,
             created_at=s.created_at, versions=s.versions,
             version_count=ver_count, comment_count=comment_count,
+            open_count=open_count,
         )
         result.append(song_data)
     return result
