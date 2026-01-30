@@ -137,6 +137,14 @@ class SettingsUpdate(BaseModel):
     text_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
     waveform_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
     waveform_progress_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    light_accent_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    light_bg_900: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    light_bg_800: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    light_bg_700: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    light_bg_600: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    light_text_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    light_waveform_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    light_waveform_progress_color: str | None = Field(default=None, pattern=r'^#[0-9A-Fa-f]{6}$')
     logo_height: int | None = Field(default=None, ge=16, le=120)
     clients_can_resolve: bool | None = None
 
@@ -150,6 +158,14 @@ class SettingsOut(BaseModel):
     text_color: str
     waveform_color: str
     waveform_progress_color: str
+    light_accent_color: str
+    light_bg_900: str
+    light_bg_800: str
+    light_bg_700: str
+    light_bg_600: str
+    light_text_color: str
+    light_waveform_color: str
+    light_waveform_progress_color: str
     logo_url: str | None = None
     logo_height: int = 32
     clients_can_resolve: bool = False

@@ -9,6 +9,7 @@ let currentVersion = null;
 let ws = null; // wavesurfer
 let comments = [];
 let authorStorageKey = 'mixreaview_author';
+let currentTheme = localStorage.getItem('mixreaview_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 
 // --- API ---
 async function api(path) {
@@ -38,26 +39,43 @@ async function loadAppSettings() {
   } catch { /* defaults */ }
 }
 
+function getThemeColors(s) {
+  if (currentTheme === 'light') {
+    return {
+      bg900: s.light_bg_900 || '#ffffff', bg800: s.light_bg_800 || '#f9fafb',
+      bg700: s.light_bg_700 || '#f3f4f6', bg600: s.light_bg_600 || '#e5e7eb',
+      accent: s.light_accent_color || '#4f46e5', text: s.light_text_color || '#111827',
+      waveform: s.light_waveform_color || '#d1d5db', waveformProgress: s.light_waveform_progress_color || '#4f46e5',
+    };
+  }
+  return {
+    bg900: s.dark_900, bg800: s.dark_800, bg700: s.dark_700, bg600: s.dark_600,
+    accent: s.accent_color, text: s.text_color,
+    waveform: s.waveform_color, waveformProgress: s.waveform_progress_color,
+  };
+}
+
 function applySettings(s) {
+  const c = getThemeColors(s);
   let style = document.getElementById('app-settings-style');
   if (!style) { style = document.createElement('style'); style.id = 'app-settings-style'; document.head.appendChild(style); }
   style.textContent = `
-    body { background-color: ${s.dark_900} !important; color: ${s.text_color} !important; }
-    .bg-dark-900 { background-color: ${s.dark_900} !important; }
-    .bg-dark-800 { background-color: ${s.dark_800} !important; }
-    .bg-dark-700 { background-color: ${s.dark_700} !important; }
-    .bg-dark-600 { background-color: ${s.dark_600} !important; }
-    .bg-accent { background-color: ${s.accent_color} !important; }
-    .text-accent { color: ${s.accent_color} !important; }
-    .font-mono.text-accent { color: ${s.accent_color} !important; }
-    .border-dark-700 { border-color: ${s.dark_700} !important; }
-    .border-dark-600 { border-color: ${s.dark_600} !important; }
-    .border-accent\\/30 { border-color: ${s.accent_color}4d !important; }
-    .bg-accent\\/10 { background-color: ${s.accent_color}1a !important; }
-    .hover\\:bg-dark-700:hover { background-color: ${s.dark_700} !important; }
-    .hover\\:bg-dark-600:hover { background-color: ${s.dark_600} !important; }
-    .hover\\:bg-indigo-600:hover { background-color: ${s.accent_color} !important; filter: brightness(0.85); }
-    .focus\\:border-accent:focus { border-color: ${s.accent_color} !important; }
+    body { background-color: ${c.bg900} !important; color: ${c.text} !important; }
+    .bg-dark-900 { background-color: ${c.bg900} !important; }
+    .bg-dark-800 { background-color: ${c.bg800} !important; }
+    .bg-dark-700 { background-color: ${c.bg700} !important; }
+    .bg-dark-600 { background-color: ${c.bg600} !important; }
+    .bg-accent { background-color: ${c.accent} !important; }
+    .text-accent { color: ${c.accent} !important; }
+    .font-mono.text-accent { color: ${c.accent} !important; }
+    .border-dark-700 { border-color: ${c.bg700} !important; }
+    .border-dark-600 { border-color: ${c.bg600} !important; }
+    .border-accent\\/30 { border-color: ${c.accent}4d !important; }
+    .bg-accent\\/10 { background-color: ${c.accent}1a !important; }
+    .hover\\:bg-dark-700:hover { background-color: ${c.bg700} !important; }
+    .hover\\:bg-dark-600:hover { background-color: ${c.bg600} !important; }
+    .hover\\:bg-indigo-600:hover { background-color: ${c.accent} !important; filter: brightness(0.85); }
+    .focus\\:border-accent:focus { border-color: ${c.accent} !important; }
   `;
   if (s.logo_url) {
     $('header-logo').src = s.logo_url;
@@ -228,9 +246,9 @@ function loadAudio(versionId, seekTo, wasPlaying) {
   destroyPlayer();
   ws = WaveSurfer.create({
     container: '#waveform',
-    waveColor: appSettings?.waveform_color || '#4b5563',
-    progressColor: appSettings?.waveform_progress_color || '#6366f1',
-    cursorColor: appSettings?.text_color || '#e5e7eb', cursorWidth: 1, height: 128,
+    waveColor: (appSettings ? getThemeColors(appSettings).waveform : '#4b5563'),
+    progressColor: (appSettings ? getThemeColors(appSettings).waveformProgress : '#6366f1'),
+    cursorColor: (appSettings ? getThemeColors(appSettings).text : '#e5e7eb'), cursorWidth: 1, height: window.innerWidth < 768 ? 64 : 128,
     barWidth: 2, barGap: 1, barRadius: 2, normalize: true,
   });
   ws.load(`/api/audio/${versionId}`);
@@ -378,5 +396,17 @@ function formatDate(iso) {
 }
 function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 
+// --- Theme Toggle ---
+function updateThemeIcon() {
+  $('theme-toggle-btn').textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+}
+$('theme-toggle-btn').addEventListener('click', () => {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('mixreaview_theme', currentTheme);
+  if (appSettings) applySettings(appSettings);
+  updateThemeIcon();
+});
+
 // --- Start ---
+updateThemeIcon();
 init();
