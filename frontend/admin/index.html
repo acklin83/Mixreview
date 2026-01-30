@@ -31,9 +31,10 @@
       position: absolute; top: 0; cursor: pointer; opacity: 0.8; z-index: 10;
     }
     .comment-marker:hover { opacity: 1; }
-    .touch-btn { display: inline-flex; align-items: center; justify-content: center; }
+    .touch-btn { display: inline-flex; align-items: center; justify-content: center; padding: 4px; }
     @media (max-width: 767px) {
-      .touch-btn { min-width: 44px; min-height: 44px; font-size: 1.1rem; }
+      .touch-btn { min-width: 44px; min-height: 44px; }
+      .touch-btn svg { width: 20px; height: 20px; }
     }
     select.styled {
       appearance: none;
@@ -77,6 +78,7 @@
         <span id="header-text">Mix Reaview Admin</span>
       </h1>
       <div class="flex items-center gap-4">
+        <button id="theme-toggle-btn" class="text-sm text-gray-400 hover:text-white transition" title="Toggle light/dark mode">🌙</button>
         <button id="settings-btn" class="text-sm text-gray-400 hover:text-white transition">Settings</button>
         <button id="logout-btn" class="text-sm text-gray-400 hover:text-white transition">Logout</button>
       </div>
@@ -209,38 +211,34 @@
       <!-- Colors -->
       <div class="bg-dark-800 rounded-lg p-6">
         <h3 class="text-lg font-semibold mb-4">Color Scheme</h3>
-        <div class="space-y-4" id="color-fields">
-          <div class="flex items-center justify-between">
-            <div><label class="block text-sm font-medium">Accent Color</label><p class="text-xs text-gray-500">Buttons, active states, progress</p></div>
-            <input id="color-accent" type="color" class="w-14 h-9 rounded cursor-pointer bg-transparent border-0">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Dark Mode Column -->
+          <div>
+            <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Dark Mode</h4>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between"><label class="text-sm">Accent</label><input id="color-accent" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">BG Darkest</label><input id="color-dark-900" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">BG Dark</label><input id="color-dark-800" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">BG Medium</label><input id="color-dark-700" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">BG Light</label><input id="color-dark-600" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">Text</label><input id="color-text" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">Waveform</label><input id="color-waveform" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">Wave Progress</label><input id="color-waveform-progress" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+            </div>
           </div>
-          <div class="flex items-center justify-between">
-            <div><label class="block text-sm font-medium">Background – Darkest</label><p class="text-xs text-gray-500">Page background</p></div>
-            <input id="color-dark-900" type="color" class="w-14 h-9 rounded cursor-pointer bg-transparent border-0">
-          </div>
-          <div class="flex items-center justify-between">
-            <div><label class="block text-sm font-medium">Background – Dark</label><p class="text-xs text-gray-500">Cards, panels, header</p></div>
-            <input id="color-dark-800" type="color" class="w-14 h-9 rounded cursor-pointer bg-transparent border-0">
-          </div>
-          <div class="flex items-center justify-between">
-            <div><label class="block text-sm font-medium">Background – Medium</label><p class="text-xs text-gray-500">Inputs, hover states</p></div>
-            <input id="color-dark-700" type="color" class="w-14 h-9 rounded cursor-pointer bg-transparent border-0">
-          </div>
-          <div class="flex items-center justify-between">
-            <div><label class="block text-sm font-medium">Background – Light</label><p class="text-xs text-gray-500">Borders, subtle elements</p></div>
-            <input id="color-dark-600" type="color" class="w-14 h-9 rounded cursor-pointer bg-transparent border-0">
-          </div>
-          <div class="flex items-center justify-between">
-            <div><label class="block text-sm font-medium">Text Color</label><p class="text-xs text-gray-500">Main text</p></div>
-            <input id="color-text" type="color" class="w-14 h-9 rounded cursor-pointer bg-transparent border-0">
-          </div>
-          <div class="flex items-center justify-between">
-            <div><label class="block text-sm font-medium">Waveform – Base</label><p class="text-xs text-gray-500">Unplayed waveform</p></div>
-            <input id="color-waveform" type="color" class="w-14 h-9 rounded cursor-pointer bg-transparent border-0">
-          </div>
-          <div class="flex items-center justify-between">
-            <div><label class="block text-sm font-medium">Waveform – Progress</label><p class="text-xs text-gray-500">Played waveform</p></div>
-            <input id="color-waveform-progress" type="color" class="w-14 h-9 rounded cursor-pointer bg-transparent border-0">
+          <!-- Light Mode Column -->
+          <div>
+            <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Light Mode</h4>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between"><label class="text-sm">Accent</label><input id="color-light-accent" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">BG Lightest</label><input id="color-light-900" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">BG Light</label><input id="color-light-800" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">BG Medium</label><input id="color-light-700" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">BG Dark</label><input id="color-light-600" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">Text</label><input id="color-light-text" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">Waveform</label><input id="color-light-waveform" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+              <div class="flex items-center justify-between"><label class="text-sm">Wave Progress</label><input id="color-light-waveform-progress" type="color" class="w-12 h-8 rounded cursor-pointer bg-transparent border-0"></div>
+            </div>
           </div>
         </div>
         <div class="flex items-center gap-3 mt-6 pt-6 border-t border-dark-700">

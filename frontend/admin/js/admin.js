@@ -255,9 +255,9 @@ function loadAudio(versionId, seekTo, wasPlaying) {
   destroyPlayer();
   ws = WaveSurfer.create({
     container: '#admin-waveform',
-    waveColor: appSettings?.waveform_color || '#4b5563',
-    progressColor: appSettings?.waveform_progress_color || '#6366f1',
-    cursorColor: appSettings?.text_color || '#e5e7eb', cursorWidth: 1, height: 128,
+    waveColor: (appSettings ? getThemeColors(appSettings).waveform : '#4b5563'),
+    progressColor: (appSettings ? getThemeColors(appSettings).waveformProgress : '#6366f1'),
+    cursorColor: (appSettings ? getThemeColors(appSettings).text : '#e5e7eb'), cursorWidth: 1, height: window.innerWidth < 768 ? 64 : 128,
     barWidth: 2, barGap: 1, barRadius: 2, normalize: true,
   });
   ws.load(`/api/audio/${versionId}`);
@@ -315,8 +315,8 @@ function renderComments() {
             class="accent-green-500">
           <span class="text-xs ${c.solved ? 'text-green-400' : 'text-gray-500'}">Done</span>
         </label>
-        <button onclick="editComment(${c.id}, '${escAttr(c.text)}')" class="text-xs md:text-xs text-gray-400 hover:text-white transition ml-1 touch-btn">&#9998;</button>
-        <button onclick="deleteComment(${c.id})" class="text-xs md:text-xs text-red-400/60 hover:text-red-400 transition touch-btn">&#10005;</button>
+        <button onclick="editComment(${c.id}, '${escAttr(c.text)}')" class="text-gray-400 hover:text-white transition ml-1 touch-btn"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+        <button onclick="deleteComment(${c.id})" class="text-red-400/60 hover:text-red-400 transition touch-btn"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
       </div>
       <p class="text-sm text-gray-400 ${c.solved ? 'line-through' : ''}">${esc(c.text)}</p>
       ${(c.replies && c.replies.length > 0) ? c.replies.map(r => `<div class="mt-2 ml-3 pl-3 border-l-2 border-accent/30"><p class="text-sm text-gray-300">${esc(r.text)}</p><span class="text-xs text-gray-500">— ${esc(r.author_name)} · ${formatDate(r.created_at)}</span></div>`).join('') : ''}
@@ -486,10 +486,19 @@ const COLOR_FIELDS = [
   'accent_color', 'dark_900', 'dark_800', 'dark_700', 'dark_600',
   'text_color', 'waveform_color', 'waveform_progress_color',
 ];
+const LIGHT_COLOR_FIELDS = [
+  'light_accent_color', 'light_bg_900', 'light_bg_800', 'light_bg_700', 'light_bg_600',
+  'light_text_color', 'light_waveform_color', 'light_waveform_progress_color',
+];
 const COLOR_DEFAULTS = {
   accent_color: '#6366f1', dark_900: '#0f0f0f', dark_800: '#1a1a1a',
   dark_700: '#2a2a2a', dark_600: '#3a3a3a', text_color: '#e5e7eb',
   waveform_color: '#4b5563', waveform_progress_color: '#6366f1',
+};
+const LIGHT_COLOR_DEFAULTS = {
+  light_accent_color: '#4f46e5', light_bg_900: '#ffffff', light_bg_800: '#f9fafb',
+  light_bg_700: '#f3f4f6', light_bg_600: '#e5e7eb', light_text_color: '#111827',
+  light_waveform_color: '#d1d5db', light_waveform_progress_color: '#4f46e5',
 };
 
 async function loadAppSettings() {
@@ -499,26 +508,43 @@ async function loadAppSettings() {
   } catch { /* defaults */ }
 }
 
+function getThemeColors(s) {
+  if (currentTheme === 'light') {
+    return {
+      bg900: s.light_bg_900 || '#ffffff', bg800: s.light_bg_800 || '#f9fafb',
+      bg700: s.light_bg_700 || '#f3f4f6', bg600: s.light_bg_600 || '#e5e7eb',
+      accent: s.light_accent_color || '#4f46e5', text: s.light_text_color || '#111827',
+      waveform: s.light_waveform_color || '#d1d5db', waveformProgress: s.light_waveform_progress_color || '#4f46e5',
+    };
+  }
+  return {
+    bg900: s.dark_900, bg800: s.dark_800, bg700: s.dark_700, bg600: s.dark_600,
+    accent: s.accent_color, text: s.text_color,
+    waveform: s.waveform_color, waveformProgress: s.waveform_progress_color,
+  };
+}
+
 function applySettings(s) {
+  const c = getThemeColors(s);
   let style = document.getElementById('app-settings-style');
   if (!style) { style = document.createElement('style'); style.id = 'app-settings-style'; document.head.appendChild(style); }
   style.textContent = `
-    body { background-color: ${s.dark_900} !important; color: ${s.text_color} !important; }
-    .bg-dark-900 { background-color: ${s.dark_900} !important; }
-    .bg-dark-800 { background-color: ${s.dark_800} !important; }
-    .bg-dark-700 { background-color: ${s.dark_700} !important; }
-    .bg-dark-600 { background-color: ${s.dark_600} !important; }
-    .bg-accent { background-color: ${s.accent_color} !important; }
-    .text-accent { color: ${s.accent_color} !important; }
-    .font-mono.text-accent { color: ${s.accent_color} !important; }
-    .border-dark-700 { border-color: ${s.dark_700} !important; }
-    .border-dark-600 { border-color: ${s.dark_600} !important; }
-    .border-accent\\/30 { border-color: ${s.accent_color}4d !important; }
-    .bg-accent\\/10 { background-color: ${s.accent_color}1a !important; }
-    .hover\\:bg-dark-700:hover { background-color: ${s.dark_700} !important; }
-    .hover\\:bg-dark-600:hover { background-color: ${s.dark_600} !important; }
-    .hover\\:bg-indigo-600:hover { background-color: ${s.accent_color} !important; filter: brightness(0.85); }
-    .focus\\:border-accent:focus { border-color: ${s.accent_color} !important; }
+    body { background-color: ${c.bg900} !important; color: ${c.text} !important; }
+    .bg-dark-900 { background-color: ${c.bg900} !important; }
+    .bg-dark-800 { background-color: ${c.bg800} !important; }
+    .bg-dark-700 { background-color: ${c.bg700} !important; }
+    .bg-dark-600 { background-color: ${c.bg600} !important; }
+    .bg-accent { background-color: ${c.accent} !important; }
+    .text-accent { color: ${c.accent} !important; }
+    .font-mono.text-accent { color: ${c.accent} !important; }
+    .border-dark-700 { border-color: ${c.bg700} !important; }
+    .border-dark-600 { border-color: ${c.bg600} !important; }
+    .border-accent\\/30 { border-color: ${c.accent}4d !important; }
+    .bg-accent\\/10 { background-color: ${c.accent}1a !important; }
+    .hover\\:bg-dark-700:hover { background-color: ${c.bg700} !important; }
+    .hover\\:bg-dark-600:hover { background-color: ${c.bg600} !important; }
+    .hover\\:bg-indigo-600:hover { background-color: ${c.accent} !important; filter: brightness(0.85); }
+    .focus\\:border-accent:focus { border-color: ${c.accent} !important; }
   `;
   // Logo
   const logo = $('header-logo');
@@ -538,8 +564,14 @@ const FIELD_TO_ID = {
   accent_color: 'color-accent', dark_900: 'color-dark-900', dark_800: 'color-dark-800',
   dark_700: 'color-dark-700', dark_600: 'color-dark-600', text_color: 'color-text',
   waveform_color: 'color-waveform', waveform_progress_color: 'color-waveform-progress',
+  light_accent_color: 'color-light-accent', light_bg_900: 'color-light-900', light_bg_800: 'color-light-800',
+  light_bg_700: 'color-light-700', light_bg_600: 'color-light-600', light_text_color: 'color-light-text',
+  light_waveform_color: 'color-light-waveform', light_waveform_progress_color: 'color-light-waveform-progress',
 };
 function fieldToInputId(field) { return FIELD_TO_ID[field]; }
+
+// Theme mode
+let currentTheme = localStorage.getItem('mixreaview_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 
 $('settings-btn').addEventListener('click', () => {
   hideAllViews(); $('settings-view').classList.remove('hidden'); destroyPlayer();
@@ -548,6 +580,10 @@ $('settings-btn').addEventListener('click', () => {
     COLOR_FIELDS.forEach(f => {
       const el = $(fieldToInputId(f));
       if (el) el.value = appSettings[f];
+    });
+    LIGHT_COLOR_FIELDS.forEach(f => {
+      const el = $(fieldToInputId(f));
+      if (el) el.value = appSettings[f] || LIGHT_COLOR_DEFAULTS[f];
     });
     // Logo
     if (appSettings.logo_url) {
@@ -575,6 +611,7 @@ $('logo-size').addEventListener('input', () => {
 $('save-settings-btn').addEventListener('click', async () => {
   const data = {};
   COLOR_FIELDS.forEach(f => { data[f] = $(fieldToInputId(f)).value; });
+  LIGHT_COLOR_FIELDS.forEach(f => { data[f] = $(fieldToInputId(f)).value; });
   data.logo_height = parseInt($('logo-size').value);
   try {
     appSettings = await api('/admin/settings', { method: 'PUT', json: data });
@@ -586,6 +623,7 @@ $('save-settings-btn').addEventListener('click', async () => {
 
 $('reset-colors-btn').addEventListener('click', () => {
   COLOR_FIELDS.forEach(f => { $(fieldToInputId(f)).value = COLOR_DEFAULTS[f]; });
+  LIGHT_COLOR_FIELDS.forEach(f => { $(fieldToInputId(f)).value = LIGHT_COLOR_DEFAULTS[f]; });
 });
 
 // Logo upload
@@ -615,4 +653,16 @@ $('delete-logo-btn').addEventListener('click', async () => {
   $('delete-logo-btn').classList.add('hidden');
 });
 
+// Theme toggle
+function updateThemeIcon() {
+  $('theme-toggle-btn').textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+}
+$('theme-toggle-btn').addEventListener('click', () => {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('mixreaview_theme', currentTheme);
+  if (appSettings) applySettings(appSettings);
+  updateThemeIcon();
+});
+
 init();
+updateThemeIcon();
