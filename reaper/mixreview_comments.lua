@@ -329,6 +329,22 @@ local function extract_share_code(input)
   return input
 end
 
+local function api_load_comments()
+  if share_link == "" then return end
+  local song = songs[selected_song_idx]
+  local ver = song and song.versions and song.versions[selected_version_idx]
+  if not ver then comments = {}; return end
+
+  local url = server_url .. "/api/projects/" .. share_link .. "/comments?version_id=" .. tostring(ver.id)
+  local status, resp = http_request("GET", url)
+  if status == 200 then
+    comments = json.decode(resp) or {}
+  else
+    error_msg = "Failed to load comments"
+    comments = {}
+  end
+end
+
 local function api_load_project()
   error_msg = ""
   loading = true
@@ -361,22 +377,6 @@ local function api_load_project()
     songs = {}
   end
   loading = false
-end
-
-local function api_load_comments()
-  if share_link == "" then return end
-  local song = songs[selected_song_idx]
-  local ver = song and song.versions and song.versions[selected_version_idx]
-  if not ver then comments = {}; return end
-
-  local url = server_url .. "/api/projects/" .. share_link .. "/comments?version_id=" .. tostring(ver.id)
-  local status, resp = http_request("GET", url)
-  if status == 200 then
-    comments = json.decode(resp) or {}
-  else
-    error_msg = "Failed to load comments"
-    comments = {}
-  end
 end
 
 local function api_create_comment(timecode, text)
