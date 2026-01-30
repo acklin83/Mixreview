@@ -65,6 +65,7 @@ class SongOut(BaseModel):
     created_at: datetime
     version_count: int = 0
     comment_count: int = 0
+    open_count: int = 0
     versions: list["VersionOut"]
 
     model_config = {"from_attributes": True}
