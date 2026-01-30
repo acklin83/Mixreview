@@ -573,32 +573,33 @@ function fieldToInputId(field) { return FIELD_TO_ID[field]; }
 // Theme mode
 let currentTheme = localStorage.getItem('mixreaview_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 
+function populateSettingsUI() {
+  if (!appSettings) return;
+  COLOR_FIELDS.forEach(f => {
+    const el = $(fieldToInputId(f));
+    if (el) el.value = appSettings[f];
+  });
+  LIGHT_COLOR_FIELDS.forEach(f => {
+    const el = $(fieldToInputId(f));
+    if (el) el.value = appSettings[f] || LIGHT_COLOR_DEFAULTS[f];
+  });
+  if (appSettings.logo_url) {
+    $('logo-img').src = appSettings.logo_url + '?t=' + Date.now();
+    $('logo-img').classList.remove('hidden'); $('logo-placeholder').classList.add('hidden');
+    $('delete-logo-btn').classList.remove('hidden');
+    $('logo-size-control').classList.remove('hidden');
+    $('logo-size').value = appSettings.logo_height || 32;
+    $('logo-size-label').textContent = appSettings.logo_height || 32;
+  } else {
+    $('logo-img').classList.add('hidden'); $('logo-placeholder').classList.remove('hidden');
+    $('delete-logo-btn').classList.add('hidden');
+    $('logo-size-control').classList.add('hidden');
+  }
+}
+
 $('settings-btn').addEventListener('click', () => {
   hideAllViews(); $('settings-view').classList.remove('hidden'); destroyPlayer();
-  // Populate color inputs
-  if (appSettings) {
-    COLOR_FIELDS.forEach(f => {
-      const el = $(fieldToInputId(f));
-      if (el) el.value = appSettings[f];
-    });
-    LIGHT_COLOR_FIELDS.forEach(f => {
-      const el = $(fieldToInputId(f));
-      if (el) el.value = appSettings[f] || LIGHT_COLOR_DEFAULTS[f];
-    });
-    // Logo
-    if (appSettings.logo_url) {
-      $('logo-img').src = appSettings.logo_url + '?t=' + Date.now();
-      $('logo-img').classList.remove('hidden'); $('logo-placeholder').classList.add('hidden');
-      $('delete-logo-btn').classList.remove('hidden');
-      $('logo-size-control').classList.remove('hidden');
-      $('logo-size').value = appSettings.logo_height || 32;
-      $('logo-size-label').textContent = appSettings.logo_height || 32;
-    } else {
-      $('logo-img').classList.add('hidden'); $('logo-placeholder').classList.remove('hidden');
-      $('delete-logo-btn').classList.add('hidden');
-      $('logo-size-control').classList.add('hidden');
-    }
-  }
+  populateSettingsUI();
 });
 
 $('back-from-settings').addEventListener('click', () => showProjects());
@@ -616,6 +617,7 @@ $('save-settings-btn').addEventListener('click', async () => {
   try {
     appSettings = await api('/admin/settings', { method: 'PUT', json: data });
     applySettings(appSettings);
+    populateSettingsUI();
     $('save-status').textContent = 'Saved!';
     setTimeout(() => $('save-status').textContent = '', 2000);
   } catch (err) { alert('Failed: ' + err.message); }
@@ -637,9 +639,7 @@ $('logo-file-input').addEventListener('change', async (e) => {
     if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Upload failed'); }
     appSettings = await res.json();
     applySettings(appSettings);
-    $('logo-img').src = appSettings.logo_url + '?t=' + Date.now();
-    $('logo-img').classList.remove('hidden'); $('logo-placeholder').classList.add('hidden');
-    $('delete-logo-btn').classList.remove('hidden');
+    populateSettingsUI();
   } catch (err) { alert(err.message); }
   $('logo-file-input').value = '';
 });
@@ -655,7 +655,8 @@ $('delete-logo-btn').addEventListener('click', async () => {
 
 // Theme toggle
 function updateThemeIcon() {
-  $('theme-toggle-btn').textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+  $('theme-icon-moon').classList.toggle('hidden', currentTheme !== 'dark');
+  $('theme-icon-sun').classList.toggle('hidden', currentTheme !== 'light');
 }
 $('theme-toggle-btn').addEventListener('click', () => {
   currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
